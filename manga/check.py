@@ -6,6 +6,7 @@ AI Sensei chat and older Safari, then the switch to the Clean page (../clean/, w
 sweeps up here, the Clean page lifts it, and the cart and the saved mode carry over. Ends with reduced motion.
 The page still holds the first design's Clean parts, hidden; this page never shows them.
 """
+import os
 import pathlib
 import re
 import sys
@@ -19,8 +20,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 site = pathlib.Path(__file__).resolve().parent
-PAGE = (site / "index.html").as_uri()
-FRONT_DOOR = (site.parent / "index.html").as_uri()
+# RSW_BASE=https://…/rsw-site-next runs it against a published copy instead of these files
+BASE = os.environ.get("RSW_BASE", "").rstrip("/")
+PAGE = f"{BASE}/manga/index.html" if BASE else (site / "index.html").as_uri()
+FRONT_DOOR = f"{BASE}/index.html" if BASE else (site.parent / "index.html").as_uri()
 
 # Dela Gothic One is loaded as a subset of just the Japanese the page uses (katakana, and the kanji of
 # Sensei's stamp and 変身), so every letter must be in it

@@ -3,6 +3,7 @@ Drives what a visitor does: the front door and the mode picker, the 変身 trans
 (../manga/, with its own check.py) and the way back, moving through the seven scenes (wheel, keys, links, swipe),
 the Lab's products and the cart, the batch check, Sensei, the phone layout, and the page with reduced motion.
 Exits non-zero on the first failure."""
+import os
 import pathlib
 import re
 import sys
@@ -14,8 +15,10 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 
 here = pathlib.Path(__file__).resolve().parent
-page = (here / "index.html").as_uri()
-front_door = (here.parent / "index.html").as_uri()
+# RSW_BASE=https://…/rsw-site-next runs it against a published copy instead of these files
+base = os.environ.get("RSW_BASE", "").rstrip("/")
+page = f"{base}/clean/index.html" if base else (here / "index.html").as_uri()
+front_door = f"{base}/index.html" if base else (here.parent / "index.html").as_uri()
 SCENES = ["power", "lab", "science", "proof", "sensei", "warriors", "final"]
 
 
