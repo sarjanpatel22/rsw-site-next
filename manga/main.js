@@ -1,44 +1,13 @@
 const root = document.documentElement;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function savedMode() {
-  try { return localStorage.getItem('rsw-mode'); } catch { return null; }
-}
-function saveMode(mode) {
-  try { localStorage.setItem('rsw-mode', mode); } catch { /* private mode: choice just won't persist */ }
-}
-
-// ---------- Clean / Manga mode ----------
+// ---------- Clean / Manga: Clean is its own page (../clean/), and ../switch.js sweeps you there ----------
 const toggle = document.querySelector('.mode-switch');
-const syncToggle = () => toggle.setAttribute('aria-pressed', root.dataset.mode === 'manga');
-syncToggle();
+toggle.setAttribute('aria-pressed', 'true');
+toggle.addEventListener('click', () => modes.leave('clean', toggle));
 
-function setMode(mode, origin) {
-  saveMode(mode);
-  const apply = () => {
-    root.dataset.mode = mode;
-    syncToggle();
-    orderSections();
-    // Clean's banner plays its entrance for the newcomer; Manga always starts at the top, with its intro
-    if (mode === 'clean') show(current, false);
-    if (mode === 'manga') {
-      if (lenis) lenis.scrollTo(0, { immediate: true });
-      else scrollTo({ top: 0, behavior: 'instant' });
-      replay('intro');
-    }
-    if (!reduceMotion) onScroll(); // the other mode's hero has a different scroll track
-  };
-  if (reduceMotion || !document.startViewTransition || !origin) return apply();
-  root.style.setProperty('--vt-x', `${origin.left + origin.width / 2}px`);
-  root.style.setProperty('--vt-y', `${origin.top + origin.height / 2}px`);
-  document.startViewTransition(apply);
-}
-
-toggle.addEventListener('click', () => {
-  setMode(root.dataset.mode === 'manga' ? 'clean' : 'manga', toggle.getBoundingClientRect());
-});
-
-// Every visit opens on the choice of mode; a reload in the same tab doesn't ask again
+// Every visit opens on the choice of mode; a reload in the same tab doesn't ask again. Picking Manga replays the
+// hero's intro (resetHero runs once the page has loaded, by then).
 const dialog = document.querySelector('.mode-dialog');
 let asked = false;
 try { asked = sessionStorage.getItem('rsw-asked') === '1'; } catch { /* private mode: ask */ }
@@ -51,13 +20,11 @@ if (!asked) {
 dialog.addEventListener('click', (e) => {
   const pick = e.target.closest('[data-pick]');
   if (!pick) return;
-  const origin = pick.getBoundingClientRect();
-  dialog.close();
-  setMode(pick.dataset.pick, origin);
+  if (pick.dataset.pick === 'clean') modes.leave('clean', pick); // first, while the button can still be measured
+  else resetHero();
+  dialog.close(pick.dataset.pick);
 });
-// Closed with Escape: keep the current mode
 dialog.addEventListener('close', () => {
-  if (!savedMode()) saveMode(root.dataset.mode);
   try { sessionStorage.setItem('rsw-asked', '1'); } catch { /* private mode: it asks again next load */ }
 });
 
@@ -82,17 +49,26 @@ if (!HTMLElement.prototype.togglePopover) {
 const cart = document.querySelector('.cart-toggle');
 const cartCount = cart.querySelector('.cart-count');
 const cartNote = document.querySelector('.cart-note');
-let inCart = 0;
+function readCart() {
+  try { return new Map(JSON.parse(sessionStorage.getItem('rsw-cart')) || []); } catch { return new Map(); }
+}
+function showCart() {
+  const inCart = [...readCart().values()].reduce((sum, qty) => sum + qty, 0);
+  const items = `${inCart} item${inCart > 1 ? 's' : ''}`;
+  cartCount.textContent = inCart;
+  cartCount.hidden = !inCart;
+  cart.setAttribute('aria-label', inCart ? `Cart, ${items}` : 'Cart, empty');
+  cartNote.textContent = inCart ? `${items} in your cart.` : 'Your cart is empty.';
+}
+showCart();
 // Every Add to cart: the shop's, and Sensei's pick in the chat
 document.addEventListener('click', (e) => {
   const add = e.target.closest('.add');
   if (!add) return;
-  inCart++;
-  const items = `${inCart} item${inCart > 1 ? 's' : ''}`;
-  cartCount.textContent = inCart;
-  cartCount.hidden = false;
-  cart.setAttribute('aria-label', `Cart, ${items}`);
-  cartNote.textContent = `${items} in your cart.`;
+  const items = readCart();
+  items.set(add.dataset.add, (items.get(add.dataset.add) || 0) + 1);
+  try { sessionStorage.setItem('rsw-cart', JSON.stringify([...items])); } catch { /* private mode: not kept */ }
+  showCart();
   add.textContent = 'Added ✓';
   setTimeout(() => { add.textContent = 'Add to cart'; }, 1500);
 });
@@ -128,16 +104,16 @@ function describe(tag) {
 // veg, nor "gain weight" as losing it.
 const questions = [
   ['goal', "What's your goal?", [
-    ['muscle', 'Build muscle', /\b(muscle|bulk|gain|mass|strong|strength|banan)/, 'img/barbell-woman.webp'],
-    ['lose', 'Lose weight', /\b(lose|losing|loss|fat|slim|cut|kam|weight|vajan|wajan|pet|belly|lean)/, 'img/sprint.webp'],
+    ['muscle', 'Build muscle', /\b(muscle|bulk|gain|mass|strong|strength|banan)/, '../img/barbell-woman.webp'],
+    ['lose', 'Lose weight', /\b(lose|losing|loss|fat|slim|cut|kam|weight|vajan|wajan|pet|belly|lean)/, '../img/sprint.webp'],
   ]],
   ['diet', 'What do you eat?', [
     ['nonveg', 'Non-vegetarian', /\b(non|egg|anda|ande|chicken|meat|fish|mutton)/],
     ['veg', 'Vegetarian', /\b(veg|shakahari|jain|paneer)/],
   ]],
   ['train', 'Where do you train?', [
-    ['gym', 'Gym', /\bgym/, 'img/dark-barbell.webp'],
-    ['home', 'Home', /\b(home|ghar|house|room|bodyweight|park)/, 'img/sensei.webp'],
+    ['gym', 'Gym', /\bgym/, '../img/dark-barbell.webp'],
+    ['home', 'Home', /\b(home|ghar|house|room|bodyweight|park)/, '../img/sensei.webp'],
   ]],
 ];
 // "I don't eat meat" names the wrong choice, so with a no in it Sensei asks for a tap instead of guessing
@@ -232,7 +208,7 @@ function plan() {
     <div class="chat-pick">
       <div><p class="chat-pick-name">${pick.name}</p><p>${pick.price}</p></div>
       <p>${why} ${pick.about}</p>
-      <button class="btn add" type="button">Add to cart</button>
+      <button class="btn add" type="button" data-add="${pick.li.querySelector('.add').dataset.add}">Add to cart</button>
     </div>
     <p class="chat-fine">General guidance, not medical advice. Talk to a doctor if you have a medical condition.</p>`);
   // The pick shows its shop card's 3D carton; the card carries the carton's colours
@@ -267,7 +243,7 @@ function hear(text) {
   });
 }
 
-post('chat-intro', `<img src="img/sensei-plan.webp" alt="" width="1000" height="563">
+post('chat-intro', `<img src="../img/sensei-plan.webp" alt="" width="1000" height="563">
   <b>Your plan in 3 questions</b>
   <span>Your goal, your food and where you train. Sensei builds your diet and workout, and picks the one RSW product that fits.</span>`);
 ask();
@@ -598,19 +574,74 @@ document.querySelectorAll('.products .stage').forEach((stage) => {
   });
 });
 
-// ---------- Manga power-up hero: --power climbs 0 → 1 while the pinned hero scrolls ----------
+// ---------- Manga power-up hero: one scroll fires the whole charge ----------
+// At the top, the first scroll down doesn't move the page (see "One scroll, one scene"): --power runs 0 → 1
+// over 2.2 s, each sound effect hits on an impact frame, and the final form bursts. After that the page
+// scrolls as usual; back at the top, the hero resets and charges again.
 const hero = document.querySelector('.hero');
 const sfx = [...hero.querySelectorAll('[data-at]')];
 const powerNum = hero.querySelector('.power b');
 const copyLines = [...hero.querySelectorAll('.hero-copy > *')];
 const finalBits = [...hero.querySelectorAll('.final > *, .flash')];
-let charged = false; // has the power-up got going since the intro last played?
+let heroState = 'idle'; // idle → charging → final → left (scrolled away), then idle again at the top
 let atTop = true; // the hero's two ends, where its animation comes round again
 let atEnd = false;
-let awaySince = -Infinity; // when the hero last scrolled up out of sight (null while on screen)
-let fresh = false; // back after a long time away: the hero shows uncharged until it rewinds
 let replayTimer = 0;
 const replayEvery = 5000; // ms between replays while the hero sits at either end
+const chargeTime = 2200; // ms from the scroll to the final form
+let scene = null; // the one-scroll scene playing, if any (see "One scroll, one scene")
+
+// The power reaches every part of the hero: the tub (hero.js reads --power), the meter and the sound effects
+function setPower(p) {
+  hero.style.setProperty('--power', p.toFixed(3));
+  hero.classList.toggle('is-charging', p > 0.25);
+  hero.classList.toggle('is-final', p >= 1);
+  sfx.forEach((el) => {
+    const on = p >= el.dataset.at;
+    if (on && !el.classList.contains('is-on')) impact();
+    el.classList.toggle('is-on', on);
+  });
+  const pct = String(Math.round(p * 100));
+  if (powerNum.textContent !== pct) powerNum.textContent = pct;
+}
+
+// An impact frame: the stage flips to inverted ink for a beat and jolts
+let impactTimer = 0;
+function impact() {
+  hero.classList.remove('is-impact');
+  void hero.offsetWidth; // so the jolt starts over
+  hero.classList.add('is-impact');
+  clearTimeout(impactTimer);
+  impactTimer = setTimeout(() => hero.classList.remove('is-impact'), 180);
+}
+
+function chargeUp(run, done) {
+  heroState = 'charging';
+  const start = performance.now();
+  let frame = 0;
+  const finish = () => {
+    cancelAnimationFrame(frame);
+    run.skip = () => {};
+    heroState = 'final';
+    setPower(1);
+    impact();
+    setTimeout(done, 700); // the final form holds the screen a moment
+  };
+  run.skip = finish;
+  frame = requestAnimationFrame(function tick(now) {
+    const t = Math.min(1, (now - start) / chargeTime);
+    if (t < 1) {
+      setPower(t ** 1.6); // slow to start, then faster and faster
+      frame = requestAnimationFrame(tick);
+    } else finish();
+  });
+}
+
+function resetHero() {
+  heroState = 'idle';
+  if (!reduceMotion) setPower(0); // without motion the hero stays still and never charges
+  replay('intro');
+}
 
 function restart(els) {
   els.forEach((el) => {
@@ -623,7 +654,6 @@ function restart(els) {
 // The Saiyan animation plays again. 'intro': the text slams back in and hero.js drops the tub
 // with its thud. 'final': the flash, shout and title burst again and hero.js sends a shockwave.
 function replay(part) {
-  if (part === 'intro') charged = false;
   restart(part === 'intro' ? copyLines : finalBits);
   hero.dispatchEvent(new Event(part));
   clearTimeout(replayTimer);
@@ -632,9 +662,15 @@ function replay(part) {
 
 // While the hero sits at either end it comes round every 5 seconds; mid-charge it waits
 function idleReplay() {
-  if (root.dataset.mode === 'manga' && (atTop || atEnd) && !document.hidden) replay(atEnd ? 'final' : 'intro');
+  if (root.dataset.mode === 'manga' && (atTop || atEnd) && !document.hidden && !scene) replay(atEnd ? 'final' : 'intro');
   else replayTimer = setTimeout(idleReplay, replayEvery);
 }
+
+// Arrived from Clean under the 変身 burst (../switch.js): it shatters once the fonts and the tub are ready, and the
+// intro plays again as the shards fly, so the words slam in and the tub lands in sight
+modes.arrive(Promise.all([document.fonts.ready, new Promise((resolve) => { hero.addEventListener('ready', resolve, { once: true }); })]), () => {
+  setTimeout(() => replay('intro'), 150);
+});
 
 // ---------- Section order: Clean is a shop, so its products, Warriors, photo strip and universe come straight after the hero ----------
 // Manga tells the story first. CSS order shows that from the first paint; moving the sections too
@@ -976,50 +1012,245 @@ const rewind = new IntersectionObserver((entries) => {
 });
 document.querySelectorAll('[data-anim~="film"]').forEach((el) => rewind.observe(el));
 
-// ---------- Scroll-linked effects (skipped when motion is unwelcome) ----------
-// Only Manga's hero follows the scroll: it pins and charges up as you scroll its tall track. Clean's
-// effects each play once (data-anim, above), so scrolling Clean costs no work at all.
-const clamp01 = (n) => Math.min(1, Math.max(0, n));
+// ---------- Batch check: the two codes on a tub open its lab report (both modes) ----------
+// Clean fills the card's rings as the lab's figure counts up; Manga scans the card first, its power level
+// flickering, then stamps it genuine. Codes match without case, spaces or dashes.
+// shortcut: two sample batches stand in for the lab's reports; at launch the lookup asks the shop for the batch
+const SAMPLE_BATCHES = [
+  { batch: 'CR-2611-07', check: '4F9K2A', product: 'Creatine Monohydrate · 250 g', made: 'Nov 2026', best: 'Oct 2028',
+    date: '05 Nov 2026', measure: 'Creatine purity', claim: 99.9, found: 99.7, unit: '%' },
+  { batch: 'WP-2610-03', check: '7H2MX9', product: 'Whey Protein · Double Chocolate · 1 kg', made: 'Oct 2026', best: 'Apr 2028',
+    date: '18 Oct 2026', measure: 'Protein per 30 g scoop', claim: 24, found: 24.6, unit: ' g' },
+];
+const batchForm = document.querySelector('.batch-form');
+const batchCard = document.querySelector('.batch-card');
+const batchError = batchForm.querySelector('.batch-error');
+const [claimGauge, foundGauge] = batchCard.querySelectorAll('.batch-gauge');
+const bare = (code) => code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+let batchRun = 0; // a new check stops the last one's count
 
-function onScroll() {
-  if (root.dataset.mode !== 'manga') return;
-  const vh = innerHeight;
-  const pin = hero.getBoundingClientRect();
-
-  // Away below the hero for over 10 s, then back: it comes back fresh. It shows uncharged while
-  // its stage slides in, and once the stage fills the screen it rewinds to the top, unseen.
-  const now = performance.now();
-  if (pin.bottom <= 0) awaySince ??= now;
-  else if (awaySince !== null) {
-    fresh = pin.top < 0 && now - awaySince > 10000;
-    awaySince = null;
-  }
-  if (fresh && pin.bottom >= vh) {
-    fresh = false;
-    charged = true; // so arriving at the top plays the intro, once
-    if (lenis) lenis.scrollTo(0, { immediate: true });
-    else scrollTo({ top: 0, behavior: 'instant' });
-    return;
-  }
-
-  // Full power a little before the pin lets go, so the final form gets a moment on screen
-  const power = fresh ? 0 : clamp01(-pin.top / ((pin.height - vh) * 0.85));
-  hero.style.setProperty('--power', power.toFixed(3));
-  hero.classList.toggle('is-charging', power > 0.25);
-  hero.classList.toggle('is-final', power > 0.92);
-  sfx.forEach((el) => el.classList.toggle('is-on', power >= el.dataset.at));
-  const pct = String(Math.round(power * 100));
-  if (powerNum.textContent !== pct) powerNum.textContent = pct;
-
-  // Back at the top after charging: the intro plays straight away
-  atTop = power < 0.02 && !fresh; // a fresh hero only shows uncharged; it isn't at the top yet
-  atEnd = power > 0.92 && pin.bottom > vh / 2; // the final form, still mostly on screen
-  if (power > 0.25) charged = true;
-  else if (charged && atTop) replay('intro');
+function fillSlot(name, text) {
+  batchCard.querySelectorAll(`[data-slot="${name}"]`).forEach((el) => { el.textContent = text; });
 }
 
+batchForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const batch = bare(batchForm.elements.batch.value);
+  const check = bare(batchForm.elements.check.value);
+  const report = SAMPLE_BATCHES.find((b) => bare(b.batch) === batch && b.check === check);
+  batchError.textContent = !batch || !check ? 'Enter both codes from your tub.'
+    : report ? ''
+    : root.dataset.mode === 'manga' ? 'No reading. Check both codes on your tub, warrior.'
+    : "We can't find that batch. Check both codes on your tub.";
+  if (report) showReport(report);
+  else batchCard.hidden = true;
+});
+
+function showReport(report) {
+  const run = ++batchRun;
+  const amount = (n) => `${n.toFixed(1)}${report.unit}`;
+  for (const key of ['product', 'batch', 'made', 'best', 'date', 'measure']) fillSlot(key, report[key]);
+  fillSlot('claim', amount(report.claim));
+  fillSlot('found', amount(0));
+  fillSlot('level', '0');
+  batchCard.hidden = false;
+  batchCard.classList.remove('is-in', 'is-scanning', 'is-verified');
+  claimGauge.style.setProperty('--fill', 0);
+  foundGauge.style.setProperty('--fill', 0);
+  void batchCard.offsetWidth; // the rings start empty, so their fill animates
+  const scan = reduceMotion || root.dataset.mode !== 'manga' ? 0 : 1250;
+  const count = reduceMotion ? 0 : 900;
+  batchCard.classList.add('is-in');
+  if (scan) batchCard.classList.add('is-scanning');
+  const start = performance.now();
+  requestAnimationFrame(function tick(now) {
+    if (run !== batchRun) return;
+    const t = now - start;
+    if (t < scan) fillSlot('level', String(1000 + Math.floor(Math.random() * 9000)));
+    else {
+      claimGauge.style.setProperty('--fill', 1);
+      foundGauge.style.setProperty('--fill', Math.min(1, report.found / report.claim));
+    }
+    const k = count ? clamp01((t - scan) / count) : 1;
+    const shown = amount(report.found * (1 - (1 - k) ** 3));
+    fillSlot('found', shown);
+    if (t >= scan) fillSlot('level', shown);
+    if (k < 1 || t < scan) requestAnimationFrame(tick);
+    else batchCard.classList.replace('is-scanning', 'is-verified') || batchCard.classList.add('is-verified');
+  });
+  batchCard.focus({ preventScroll: true });
+  if (batchCard.getBoundingClientRect().bottom > innerHeight) {
+    if (lenis) lenis.scrollTo(batchCard, { offset: -100 });
+    else batchCard.scrollIntoView({ behavior: reduceMotion ? 'instant' : 'smooth', block: 'center' });
+  }
+}
+
+// ---------- One scroll, one scene (skipped when motion is unwelcome) ----------
+// A single scroll plays a whole scene instead of scrubbing through it: the power-up from the top of the page,
+// and the training arc when a wheel or the keys bring it on screen (wide screens). The page holds still while a scene plays, and a fresh scroll skips to its end.
+// Touch screens start the heroes with a swipe; a phone's fling can't be caught mid-flight, so they see the
+// arc play as it comes into view.
+const clamp01 = (n) => Math.min(1, Math.max(0, n));
+const pageY = () => (lenis ? Math.max(lenis.scroll, lenis.targetScroll) : scrollY);
+const atPageTop = () => pageY() < 2;
 let lenis = null;
+
+function overlayOpen() {
+  if (document.querySelector('dialog[open]')) return true;
+  try {
+    return Boolean(document.querySelector(':popover-open'));
+  } catch {
+    return Boolean(document.querySelector('[popover].is-open')); // Safari before 17 (see the phone menu)
+  }
+}
+
+// ---------- The training arc: six panels in one go ----------
+// Wide screens: brought on screen by a wheel or the keys, the page glides to fit it and holds while it plays
+// (playArc). Any other way in (the scrollbar, a link, a swipe) it plays as it comes into view, without the
+// hold. Coming back up into it, it's already finished; once it's wholly off screen it rewinds for next time.
+// Phones play each panel as it scrolls in.
+const arc = document.querySelector('.arc');
+const arcPanels = [...arc.children];
+const arcTime = 3600; // ms: the last panel's turn plus its caption
+const wide = matchMedia('(min-width: 44rem)');
+let arcTimer = 0;
+const arcBusy = () => arc.matches('.is-playing, .is-done');
+
+function arcFinish() {
+  clearTimeout(arcTimer);
+  arc.classList.remove('is-playing');
+  arc.classList.add('is-done');
+}
+
+function arcStart(onEnd = arcFinish) {
+  arc.classList.remove('is-done');
+  arc.classList.add('is-playing');
+  clearTimeout(arcTimer);
+  arcTimer = setTimeout(onEnd, arcTime);
+}
+
+function arcWants() {
+  if (!lenis || !wide.matches || arcBusy()) return false;
+  const top = arc.getBoundingClientRect().top;
+  return top > innerHeight * 0.05 && top < innerHeight * 0.85;
+}
+
+function playArc(run, done) {
+  const nav = document.querySelector('.nav').getBoundingClientRect().bottom;
+  const box = arc.getBoundingClientRect();
+  const y = lenis.scroll + box.top - nav - Math.max(0, (innerHeight - nav - box.height) / 2);
+  lenis.scrollTo(y, { duration: 0.7, force: true });
+  const end = () => {
+    run.skip = () => {};
+    lenis.scrollTo(y, { immediate: true, force: true });
+    arcFinish();
+    done();
+  };
+  arcStart(end);
+  run.skip = end;
+}
+
+const scenes = [
+  { wants: () => root.dataset.mode === 'manga' && heroState === 'idle' && atPageTop(), run: chargeUp },
+  { wants: arcWants, run: playArc },
+];
+
+// While a scene plays, touch scrolling is held too, and a fresh swipe skips it
+let newSwipe = false;
+function holdTouch(e) {
+  if (e.cancelable) e.preventDefault();
+  if (newSwipe) {
+    newSwipe = false;
+    intent(0, true);
+  }
+}
+
+function begin(run) {
+  lenis?.stop();
+  addEventListener('touchmove', holdTouch, { passive: false });
+  scene = { skip: () => {}, started: performance.now() };
+  run(scene, () => {
+    scene = null;
+    removeEventListener('touchmove', holdTouch, { passive: false });
+    lenis?.start();
+  });
+}
+
+// A scroll down (1) or up (-1) from the wheel, a swipe or a key. Returns true if a scene took it, so the
+// page doesn't move. A fresh scroll (a new gesture, not the tail of the one that started the scene) skips.
+function intent(dir, fresh) {
+  if (scene) {
+    if (fresh && performance.now() - scene.started > 350) scene.skip();
+    return true;
+  }
+  if (dir <= 0 || overlayOpen()) return false;
+  const hit = scenes.find((s) => s.wants());
+  if (hit) begin(hit.run);
+  return Boolean(hit);
+}
+
+// Manga: away from the top after the final form, the hero resets once you're back at the top
+function onScroll() {
+  if (root.dataset.mode !== 'manga') return;
+  const y = lenis ? lenis.scroll : scrollY;
+  if (heroState === 'final' && y > innerHeight * 0.6) heroState = 'left';
+  if (heroState === 'left' && y < 2) resetHero();
+  atTop = heroState === 'idle' && y < 2;
+  atEnd = heroState === 'final' && y < innerHeight / 2;
+}
+
 if (!reduceMotion) {
+  // Registered before Lenis's own wheel listener, so a scene can take a scroll before Lenis moves the page
+  let lastWheel = -Infinity;
+  addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.target.closest?.('[data-lenis-prevent]')) return; // pinch zoom; scrolling inside a dialog
+    const fresh = e.timeStamp - lastWheel > 200;
+    lastWheel = e.timeStamp;
+    if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+    if (intent(Math.sign(e.deltaY), fresh)) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  }, { passive: false });
+
+  // Down keys can start a scene; while one plays, every scrolling key is held
+  const keys = { ArrowDown: 1, PageDown: 1, ' ': 1, ArrowUp: -1, PageUp: -1, Home: -1, End: 0 };
+  addEventListener('keydown', (e) => {
+    if (!(e.key in keys) || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.target.closest?.('input, textarea, select, button, [contenteditable], dialog, [popover]')) return;
+    const dir = e.key === ' ' && e.shiftKey ? -1 : keys[e.key];
+    if ((scene || dir > 0) && intent(dir, !e.repeat)) e.preventDefault();
+  });
+
+  // A swipe at the top of the page: only the hero listens, so other swipes stay non-blocking
+  let touchY = null;
+  addEventListener('touchstart', (e) => {
+    newSwipe = true;
+    touchY = e.touches.length === 1 ? e.touches[0].clientY : null;
+  }, { passive: true });
+  hero.addEventListener('touchmove', (e) => {
+    if (scene || touchY === null) return;
+    const dy = touchY - e.touches[0].clientY;
+    if (Math.abs(dy) < 8) return;
+    touchY = null; // one decision a swipe
+    if (intent(Math.sign(dy), true) && e.cancelable) e.preventDefault();
+  }, { passive: false });
+
+  // The arc plays as it comes into view when no scene brought it on screen, and is already finished when
+  // you come back up into it; wholly off screen, it rewinds. Phones play each panel as it scrolls in.
+  new IntersectionObserver(([e]) => {
+    if (!e.isIntersecting) {
+      clearTimeout(arcTimer);
+      arc.classList.remove('is-playing', 'is-done');
+      arcPanels.forEach((panel) => panel.classList.remove('is-in'));
+    } else if (!arcBusy() && e.boundingClientRect.top < 0) arcFinish();
+    else if (!arcBusy() && wide.matches && e.intersectionRatio >= 0.5) arcStart();
+  }, { threshold: [0, 0.5] }).observe(arc);
+  const panelsIn = new IntersectionObserver((entries) => {
+    entries.forEach((e) => e.isIntersecting && !wide.matches && e.target.classList.add('is-in'));
+  }, { rootMargin: '0px 0px -12% 0px' });
+  arcPanels.forEach((panel) => panelsIn.observe(panel));
+
   // Lenis eases wheel scrolling and anchor jumps, and reports every scroll, keys and scrollbar included.
   // Touch screens scroll natively: Lenis would leave touch alone anyway, but its blocking touch listeners
   // make every swipe wait for the page's work

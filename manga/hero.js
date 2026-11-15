@@ -1,21 +1,10 @@
 // ---------- Manga power-up hero: the RSW tub in 3D, drawn with three.js ----------
 // main.js turns the hero's scroll into --power (0 → 1). Every frame this reads it and charges
 // the scene: aura, rising sparks and rocks, lightning, then the final-form burst. It only runs
-// while Manga's stage is on screen (Clean has its own slider). With reduced motion it draws one
+// while the stage is on screen. With reduced motion it draws one
 // still frame; without three.js or WebGL the text hero stands on its own.
 (async () => {
-  // Clean never shows this stage, so three.js only loads once Manga is picked
   const root = document.documentElement;
-  if (root.dataset.mode !== 'manga') {
-    await new Promise((resolve) => {
-      const watch = new MutationObserver(() => {
-        if (root.dataset.mode !== 'manga') return;
-        watch.disconnect();
-        resolve();
-      });
-      watch.observe(root, { attributes: true, attributeFilter: ['data-mode'] });
-    });
-  }
 
   const hero = document.querySelector('.hero');
   const stage = hero.querySelector('.hero-stage');
@@ -330,6 +319,7 @@
     return true;
   }
 
+  let drawn = false;
   function frame(now = 0) {
     const dt = last ? Math.min((now - last) / 1000, 0.05) : 0;
     last = now;
@@ -410,6 +400,11 @@
     uniforms.uFinal.value = final;
     renderer.setClearColor(bg.copy(coal).lerp(deepRed, power * 0.6 + final * 0.4));
     renderer.render(scene, camera);
+    // The first frame compiles the shaders; main.js lifts the cover from Clean only after it, so the shards fly smoothly
+    if (!drawn) {
+      drawn = true;
+      hero.dispatchEvent(new Event('ready'));
+    }
   }
 
   // main.js asks for the animation again: the intro's drop (back at the top, or Manga picked),
@@ -430,7 +425,7 @@
     if (still) frame();
   }).observe(canvas);
 
-  // Only animate while Manga's stage is on screen (in Clean it's hidden, so it never is)
+  // Only animate while the stage is on screen
   if (!still) {
     new IntersectionObserver(([entry]) => renderer.setAnimationLoop(entry.isIntersecting ? frame : null)).observe(stage);
   }

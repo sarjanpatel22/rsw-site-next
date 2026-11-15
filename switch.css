@@ -1,0 +1,605 @@
+/* ==========================================================================
+   One site, two modes. Clean (clean/) and Manga (manga/) are two pages; this file and switch.js are shared by
+   both: the "choose your mode" screen, and the transformation that carries you from one page to the other.
+   Leaving: the page covers itself (.is-leaving with .is-henshin or .is-launching on <html>), then moves on.
+   Arriving: the next page's first paint is that same cover (its head script adds .is-arriving and the same
+   class), held until the page is ready; .is-revealing then plays the rest.
+   Clean → Manga, 変身: an action burst grows out of the button while 変身!! slams in; on the Manga page a flash,
+   and eight shards round that point fly apart. Manga → Clean: black and steel bars sweep up with a red CLEAN;
+   on the Clean page they lift away.
+   Fixed colours and fonts, so both pages draw the cover exactly alike.
+   ========================================================================== */
+.mode-dialog,
+.henshin,
+.launch {
+  --m-gutter: clamp(1rem, 4vw, 3.5rem);
+  --m-display: "Anton", Impact, "Arial Narrow", sans-serif;
+  --m-body: "Montserrat", system-ui, sans-serif;
+  --m-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --m-jp: "Dela Gothic One", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --m-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --m-ease-io: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+/* ---------- Choose your mode: a fighting game's select screen, split down a slant ---------- */
+.mode-dialog {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #f4f3ef;
+  overflow: hidden;
+}
+
+.mode-dialog[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.mode-dialog::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+
+.mode-dialog h2,
+.mode-note {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  text-align: center;
+  background: #000;
+  color: #f4f3ef;
+  text-shadow: none;
+}
+
+.mode-dialog h2 {
+  padding: 1.25rem var(--m-gutter) 0.6rem;
+  font: 400 clamp(1.2rem, 2.4vw, 1.6rem) / 1 var(--m-display);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.mode-note {
+  padding: 0.75rem var(--m-gutter) calc(0.9rem + env(safe-area-inset-bottom));
+  font: 500 0.64rem / 1 var(--m-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgb(244 243 239 / 0.7);
+}
+
+/* Black behind the two sides, so the sliver between their slants is a black slash on either page */
+.choices {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 0;
+  background: #000;
+}
+
+.choice {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-content: end;
+  gap: 0.5rem;
+  min-height: 0;
+  margin: 0;
+  padding: 1.5rem var(--m-gutter);
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.choice b {
+  font: 400 clamp(3.4rem, 12vw, 9rem) / 0.86 var(--m-display);
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.choice span {
+  font: 500 0.72rem / 1.2 var(--m-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Clean: points of light on black, a red glow where the world stands */
+.choice-clean {
+  background:
+    radial-gradient(rgb(244 243 239 / 0.9) 1px, transparent 1.6px) 0 0 / 34px 34px,
+    radial-gradient(80% 90% at 70% 40%, rgb(150 14 34 / 0.6), transparent 70%),
+    #050505;
+  color: #f4f3ef;
+}
+
+/* Manga: paper, screentone and speed lines */
+.choice-manga {
+  background:
+    repeating-conic-gradient(from 0deg at 75% 45%, rgb(20 16 16 / 0.22) 0deg 1deg, transparent 1deg 5deg),
+    radial-gradient(rgb(20 16 16 / 0.25) 1px, transparent 1.5px) 0 0 / 6px 6px,
+    #f3ebdc;
+  color: #141010;
+}
+
+.choice-manga b {
+  text-shadow: 0.05em 0.05em 0 #d8001f;
+}
+
+.choice-manga i {
+  position: absolute;
+  top: 1.2rem;
+  right: var(--m-gutter);
+  font: 400 clamp(1.6rem, 4vw, 3rem) / 1 var(--m-jp);
+  font-style: normal;
+  color: #d8001f;
+  -webkit-text-stroke: 0.05em #141010;
+  paint-order: stroke fill;
+}
+
+.choice:focus-visible {
+  outline: 3px solid #d8001f;
+  outline-offset: -6px;
+}
+
+@media (hover: hover) {
+  .choice b {
+    transition: translate 0.5s var(--m-ease), letter-spacing 0.5s var(--m-ease);
+  }
+
+  .choice:hover b {
+    translate: 0.4rem 0;
+    letter-spacing: 0.03em;
+  }
+}
+
+@media (min-width: 48rem) and (min-aspect-ratio: 1 / 1) {
+  .choices {
+    grid-template-rows: none;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .choice {
+    padding: 2rem clamp(1.5rem, 4vw, 4rem) 3rem;
+  }
+
+  .choice-clean {
+    clip-path: polygon(0 0, 100% 0, 88% 100%, 0 100%);
+    margin-right: -6%;
+  }
+
+  .choice-manga {
+    clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%);
+    margin-left: -6%;
+    padding-left: calc(6% + clamp(1.5rem, 4vw, 4rem));
+    text-align: right;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mode-dialog[open] .choice-clean {
+    animation: mode-from-left 0.8s var(--m-ease) both;
+  }
+
+  .mode-dialog[open] .choice-manga {
+    animation: mode-from-right 0.8s var(--m-ease) 0.08s both;
+  }
+}
+
+/* ---------- The covers ---------- */
+@property --burst {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+.henshin,
+.launch {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow: clip;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* While a cover is up it also takes the clicks, so nothing underneath starts mid-change */
+.is-henshin .henshin,
+.is-launching .launch {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Clean → Manga. The burst and the shards share one fill: screentone, a hot core at the button and speed lines out
+   of it, on red. switch.js puts the button's centre in --vt-x / --vt-y. */
+.henshin {
+  --h-red: #c8102e;
+  --h-hot: #ffb36b;
+  --h-ink: #1d1414;
+  --h-paper: #f6e9d3;
+}
+
+.henshin-burst,
+.henshin-shard {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(rgb(0 0 0 / 0.2) 1.2px, transparent 1.8px) 0 0 / 8px 8px,
+    radial-gradient(circle at var(--vt-x) var(--vt-y), var(--h-hot) 0 2vmax, transparent 26vmax),
+    repeating-conic-gradient(from 0deg at var(--vt-x) var(--vt-y), rgb(255 255 255 / 0.2) 0 1deg, transparent 1deg 5deg),
+    var(--h-red);
+}
+
+/* A jagged action burst, 14 spikes; at full size even its inner corners are past the screen's corners */
+.henshin-burst {
+  clip-path: polygon(
+    calc(var(--vt-x) + 0.000 * var(--burst)) calc(var(--vt-y) - 1.000 * var(--burst)),
+    calc(var(--vt-x) + 0.129 * var(--burst)) calc(var(--vt-y) - 0.565 * var(--burst)),
+    calc(var(--vt-x) + 0.434 * var(--burst)) calc(var(--vt-y) - 0.901 * var(--burst)),
+    calc(var(--vt-x) + 0.362 * var(--burst)) calc(var(--vt-y) - 0.453 * var(--burst)),
+    calc(var(--vt-x) + 0.782 * var(--burst)) calc(var(--vt-y) - 0.623 * var(--burst)),
+    calc(var(--vt-x) + 0.523 * var(--burst)) calc(var(--vt-y) - 0.252 * var(--burst)),
+    calc(var(--vt-x) + 0.975 * var(--burst)) calc(var(--vt-y) - 0.223 * var(--burst)),
+    calc(var(--vt-x) + 0.580 * var(--burst)) calc(var(--vt-y) + 0.000 * var(--burst)),
+    calc(var(--vt-x) + 0.975 * var(--burst)) calc(var(--vt-y) + 0.223 * var(--burst)),
+    calc(var(--vt-x) + 0.523 * var(--burst)) calc(var(--vt-y) + 0.252 * var(--burst)),
+    calc(var(--vt-x) + 0.782 * var(--burst)) calc(var(--vt-y) + 0.623 * var(--burst)),
+    calc(var(--vt-x) + 0.362 * var(--burst)) calc(var(--vt-y) + 0.453 * var(--burst)),
+    calc(var(--vt-x) + 0.434 * var(--burst)) calc(var(--vt-y) + 0.901 * var(--burst)),
+    calc(var(--vt-x) + 0.129 * var(--burst)) calc(var(--vt-y) + 0.565 * var(--burst)),
+    calc(var(--vt-x) + 0.000 * var(--burst)) calc(var(--vt-y) + 1.000 * var(--burst)),
+    calc(var(--vt-x) - 0.129 * var(--burst)) calc(var(--vt-y) + 0.565 * var(--burst)),
+    calc(var(--vt-x) - 0.434 * var(--burst)) calc(var(--vt-y) + 0.901 * var(--burst)),
+    calc(var(--vt-x) - 0.362 * var(--burst)) calc(var(--vt-y) + 0.453 * var(--burst)),
+    calc(var(--vt-x) - 0.782 * var(--burst)) calc(var(--vt-y) + 0.623 * var(--burst)),
+    calc(var(--vt-x) - 0.523 * var(--burst)) calc(var(--vt-y) + 0.252 * var(--burst)),
+    calc(var(--vt-x) - 0.975 * var(--burst)) calc(var(--vt-y) + 0.223 * var(--burst)),
+    calc(var(--vt-x) - 0.580 * var(--burst)) calc(var(--vt-y) + 0.000 * var(--burst)),
+    calc(var(--vt-x) - 0.975 * var(--burst)) calc(var(--vt-y) - 0.223 * var(--burst)),
+    calc(var(--vt-x) - 0.523 * var(--burst)) calc(var(--vt-y) - 0.252 * var(--burst)),
+    calc(var(--vt-x) - 0.782 * var(--burst)) calc(var(--vt-y) - 0.623 * var(--burst)),
+    calc(var(--vt-x) - 0.362 * var(--burst)) calc(var(--vt-y) - 0.453 * var(--burst)),
+    calc(var(--vt-x) - 0.434 * var(--burst)) calc(var(--vt-y) - 0.901 * var(--burst)),
+    calc(var(--vt-x) - 0.129 * var(--burst)) calc(var(--vt-y) - 0.565 * var(--burst))
+  );
+}
+
+/* A 45° slice round the button, a hair wider so no seam shows, far longer than the screen */
+.henshin-shard {
+  --from: calc(var(--a) - 0.6deg);
+  --to: calc(var(--a) + 45.6deg);
+  clip-path: polygon(
+    var(--vt-x) var(--vt-y),
+    calc(var(--vt-x) + cos(var(--from)) * 250vmax) calc(var(--vt-y) + sin(var(--from)) * 250vmax),
+    calc(var(--vt-x) + cos(var(--to)) * 250vmax) calc(var(--vt-y) + sin(var(--to)) * 250vmax)
+  );
+  transform-origin: var(--vt-x) var(--vt-y);
+  opacity: 0;
+}
+
+.henshin-word {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  color: var(--h-paper);
+  opacity: 0;
+}
+
+.henshin-word b {
+  font: 400 clamp(4.5rem, 19vw, 15rem) / 1 var(--m-jp);
+  -webkit-text-stroke: 0.035em var(--h-ink);
+  paint-order: stroke fill;
+  text-shadow: 0.06em 0.06em 0 var(--h-ink);
+  rotate: -6deg;
+}
+
+.henshin-word small {
+  font: 400 clamp(1rem, 2.2vw, 1.6rem) / 1 var(--m-display);
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+}
+
+.henshin-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+}
+
+/* Leaving Clean: the burst grows over the page and 変身!! slams in, then rumbles while the Manga page loads */
+.is-leaving.is-henshin .henshin-burst {
+  animation: mode-burst 0.5s cubic-bezier(0.55, 0, 0.85, 0.4) both;
+}
+
+.is-leaving.is-henshin .henshin-word {
+  animation: mode-word-in 0.42s var(--m-ease) 0.12s both;
+}
+
+.is-leaving.is-henshin .henshin-word b,
+.is-arriving.is-henshin .henshin-word b {
+  animation: mode-rumble 0.1s steps(2) 0.34s infinite;
+}
+
+/* Arriving on Manga: the same full burst and word, until the page is ready */
+.is-arriving.is-henshin .henshin-burst {
+  --burst: 215vmax;
+}
+
+.is-arriving.is-henshin .henshin-word {
+  opacity: 1;
+}
+
+/* Then a flash, and the shards fly apart over the Manga page */
+.is-revealing.is-henshin .henshin-burst {
+  animation: mode-gone 0s 0.06s forwards;
+}
+
+.is-revealing.is-henshin .henshin-shard {
+  animation:
+    mode-shown 0s forwards,
+    mode-shatter 0.7s cubic-bezier(0.5, 0, 0.9, 0.6) 0.12s forwards;
+}
+
+.is-revealing.is-henshin .henshin-word {
+  animation: mode-word-out 0.7s var(--m-ease) 0.1s forwards;
+}
+
+.is-revealing.is-henshin .henshin-word b {
+  animation: none;
+}
+
+.is-revealing.is-henshin .henshin-flash {
+  animation: mode-flash 0.3s linear;
+}
+
+/* Manga → Clean: black and steel bars, the last with the word */
+.launch {
+  display: grid;
+}
+
+.launch i {
+  grid-area: 1 / 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.75rem;
+  background: var(--c);
+  color: #f4f3ef;
+  font-style: normal;
+  clip-path: inset(100% 0 0);
+}
+
+.launch i:nth-child(1) {
+  --c: #000;
+}
+
+.launch i:nth-child(2) {
+  --c: #3a3a3a;
+  --k: 1;
+}
+
+.launch i:nth-child(3) {
+  --c: #0b0b0b;
+  --k: 2;
+}
+
+.launch b {
+  font: 400 clamp(4rem, 20vw, 18rem) / 0.85 var(--m-display);
+  text-transform: uppercase;
+  color: #e3132f;
+}
+
+.launch small {
+  font: 800 clamp(0.75rem, 1.2vw, 1rem) / 1 var(--m-body);
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+}
+
+.launch em {
+  position: absolute;
+  top: clamp(5.5rem, 14vh, 9rem);
+  right: var(--m-gutter);
+  font: 400 clamp(1.5rem, 4vw, 3.5rem) / 1 var(--m-jp);
+  font-style: normal;
+  writing-mode: vertical-rl;
+  opacity: 0.25;
+}
+
+/* Leaving Manga: the bars sweep up, then the word */
+.is-leaving.is-launching .launch i {
+  animation: mode-bar-in 0.5s var(--m-ease-io) calc(var(--k, 0) * 0.08s) both;
+}
+
+.is-leaving.is-launching .launch :is(b, small, em) {
+  animation: mode-word-up 0.55s var(--m-ease) 0.2s both;
+}
+
+/* Arriving on Clean: the bars stand until the page is ready, then lift away, the top one first */
+.is-arriving.is-launching .launch i {
+  clip-path: inset(0);
+}
+
+.is-revealing.is-launching .launch i {
+  animation: mode-bar-out 0.55s var(--m-ease-io) calc((2 - var(--k, 0)) * 0.08s) forwards;
+}
+
+.is-revealing.is-launching .launch :is(b, small, em) {
+  animation: mode-word-away 0.5s var(--m-ease-io) forwards;
+}
+
+/* If a page never gets to lifting its cover (a script failed to load), it lifts itself; a page that never moves
+   on, after a long wait, too */
+.is-arriving:not(.is-revealing) :is(.henshin, .launch) {
+  animation: mode-gone 0s 5s forwards;
+}
+
+.is-leaving :is(.henshin, .launch) {
+  animation: mode-gone 0s 10s forwards;
+}
+
+/* ---------- Keyframes ---------- */
+@keyframes mode-from-left {
+  from {
+    translate: -12% 0;
+    opacity: 0;
+  }
+}
+
+@keyframes mode-from-right {
+  from {
+    translate: 12% 0;
+    opacity: 0;
+  }
+}
+
+@keyframes mode-burst {
+  to {
+    --burst: 215vmax;
+  }
+}
+
+@keyframes mode-word-in {
+  0% {
+    opacity: 0;
+    scale: 3;
+  }
+
+  50% {
+    opacity: 1;
+    scale: 1;
+  }
+
+  65% {
+    scale: 1.07;
+  }
+
+  80%,
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes mode-word-out {
+  to {
+    opacity: 0;
+    scale: 1.8;
+  }
+}
+
+@keyframes mode-rumble {
+  50% {
+    translate: 3px -2px;
+  }
+}
+
+@keyframes mode-shake {
+  12% {
+    translate: -6px 4px;
+  }
+
+  25% {
+    translate: 8px -5px;
+  }
+
+  37% {
+    translate: -10px -3px;
+  }
+
+  50% {
+    translate: 9px 6px;
+  }
+
+  62% {
+    translate: -7px 5px;
+  }
+
+  75% {
+    translate: 5px -4px;
+  }
+
+  87% {
+    translate: -3px 2px;
+  }
+
+  100% {
+    translate: 0 0;
+  }
+}
+
+@keyframes mode-flash {
+  0%,
+  30% {
+    opacity: 0.95;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes mode-gone {
+  to {
+    visibility: hidden;
+  }
+}
+
+@keyframes mode-shown {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mode-shatter {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+    translate: calc(cos(var(--a) + 22.5deg) * 40vmax) calc(sin(var(--a) + 22.5deg) * 40vmax);
+    rotate: var(--r);
+    scale: 1.08;
+  }
+}
+
+@keyframes mode-bar-in {
+  from {
+    clip-path: inset(100% 0 0);
+  }
+
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes mode-bar-out {
+  from {
+    clip-path: inset(0);
+  }
+
+  to {
+    clip-path: inset(0 0 100%);
+  }
+}
+
+@keyframes mode-word-up {
+  from {
+    opacity: 0;
+    translate: 0 40%;
+  }
+}
+
+@keyframes mode-word-away {
+  to {
+    opacity: 0;
+    translate: 0 -60%;
+  }
+}

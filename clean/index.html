@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en" data-mode="clean">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RSW — Real Saiyan Wellness</title>
+  <meta name="description" content="Real Saiyan Wellness: lab-tested fitness fuel with an anime soul. Tap into your final form.">
+  <!-- Test site: keep search engines out. Remove at launch. -->
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+
+  <!-- Runs before first paint. This page is Clean (Manga is ../manga/), so it's the mode the front door opens next
+       time. Arrived from the Manga page (../switch.js): paint its cover first and hold it until this page is ready. -->
+  <script>
+    document.documentElement.classList.add('js');
+    try {
+      localStorage.setItem('rsw-mode', 'clean');
+      const via = JSON.parse(sessionStorage.getItem('rsw-via'));
+      sessionStorage.removeItem('rsw-via');
+      if (via?.mode === 'clean' && Date.now() - via.at < 10000 && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        window.rswVia = via;
+        document.documentElement.classList.add('is-arriving', 'is-launching');
+      }
+    } catch {}
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Anton sets the scenes' titles. shortcut: Archivo Expanded + Montserrat stand in for the deck's paid Fit ExtraWide +
+       Gotham. IBM Plex Mono sets the readouts; Anek Gujarati the Gujarati. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wdth,wght@125,900&family=IBM+Plex+Mono:wght@500&family=Montserrat:wght@500;700;800&family=Anek+Gujarati:wdth,wght@100,700&display=swap">
+  <!-- Only the Japanese this page uses (check.py fails if a letter is missing; it would fall back to a box) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&text=%E3%82%A2%E3%82%A4%E3%82%A6%E3%82%AA%E3%82%AB%E3%82%AC%E3%82%AD%E3%82%AF%E3%82%B3%E3%82%B4%E3%82%B7%E3%82%B9%E3%82%BA%E3%82%BB%E3%83%81%E3%83%83%E3%83%86%E3%83%88%E3%83%89%E3%83%8E%E3%83%8F%E3%83%90%E3%83%93%E3%83%94%E3%83%97%E3%83%9B%E3%83%9C%E3%83%9E%E3%83%9F%E3%83%A2%E3%83%A5%E3%83%A7%E3%83%A9%E3%83%AA%E3%83%AC%E3%83%AD%E3%83%AF%E3%83%B3%E3%83%BC%E4%BF%AE%E5%85%88%E5%A3%AB%E5%A4%89%E5%BD%A2%E6%85%8B%E6%88%A6%E6%9C%80%E6%9F%BB%E6%A4%9C%E7%94%9F%E7%B5%82%E8%A1%8C%E8%BA%AB%21&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <!-- The mode picker and the change to Manga, shared with the Manga page -->
+  <link rel="stylesheet" href="../switch.css">
+  <!-- three.js draws the world. Its minified build imports the full-size core, so the map points that at the minified
+       core; the integrity hashes pin every file. -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.min.js",
+        "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.core.js": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.core.min.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+      },
+      "integrity": {
+        "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.min.js": "sha384-EU5UWigB3OuXjAXooUegndJSqYber3YSJHDoMZs6rV96yY/ol/B4W8logw4CKWkA",
+        "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.core.min.js": "sha384-ktZslgpl0L71WZcQ5wKV96Z04i9QSjtmiU/kYpjDQSfJ5NJ8B79qDF63oNTbQySl",
+        "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/environments/RoomEnvironment.js": "sha384-/H49oz0ZtMgJNgMZ+OhhuMuKBOsaiC3kY0/PZSvgJJXAOJJwmSBJjzlV5lJul3MB"
+      }
+    }
+  </script>
+  <script src="../switch.js" defer></script>
+  <script src="main.js" defer></script>
+  <script src="photos.js" defer></script>
+  <script src="world.js" defer></script>
+</head>
+<body>
+  <!-- Clean → Manga, 変身 ("transform!"): an action burst grows out of the button and 変身!! slams in; the Manga page
+       then shatters it (../switch.css). Both covers come first in the page, so an arrival paints its cover first. -->
+  <div class="henshin" aria-hidden="true">
+    <i class="henshin-burst"></i>
+    <i class="henshin-shard" style="--a: 0deg; --r: -14deg"></i>
+    <i class="henshin-shard" style="--a: 45deg; --r: 11deg"></i>
+    <i class="henshin-shard" style="--a: 90deg; --r: -9deg"></i>
+    <i class="henshin-shard" style="--a: 135deg; --r: 16deg"></i>
+    <i class="henshin-shard" style="--a: 180deg; --r: -12deg"></i>
+    <i class="henshin-shard" style="--a: 225deg; --r: 10deg"></i>
+    <i class="henshin-shard" style="--a: 270deg; --r: -15deg"></i>
+    <i class="henshin-shard" style="--a: 315deg; --r: 13deg"></i>
+    <p class="henshin-word"><b>変身!!</b> <small>Transform</small></p>
+    <i class="henshin-flash"></i>
+  </div>
+
+  <!-- Arriving from Manga: black and steel bars with CLEAN, lifted away once the page is ready (../switch.css) -->
+  <div class="launch" aria-hidden="true">
+    <i></i>
+    <i></i>
+    <i><b>Clean</b><small>Light on black. Calm power.</small><em>クリーン</em></i>
+  </div>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- The world: particles of energy behind every scene (world.js). Clean: light on black. Manga: ink on paper. -->
+  <canvas class="world" aria-hidden="true"></canvas>
+  <!-- Real people, for real: a photo forms in particles, then the photo itself comes through over them (world.js) -->
+  <img class="portrait" alt="" aria-hidden="true">
+  <!-- Manga frames the screen like a manga panel; on a scene change speed lines flash and a sound effect pops -->
+  <div class="frame" aria-hidden="true"><i class="frame-lines"></i><b class="frame-sfx"></b></div>
+  <!-- Held to the full: the final form flashes over everything -->
+  <p class="flash" aria-hidden="true"><b>最終形態</b> <small>Final form</small></p>
+
+  <header class="hud">
+    <a class="logo" href="#power" aria-label="RSW, back to the start">RSW</a>
+    <p class="hud-now"><b data-now="num">01</b><span>/07</span> <span data-now="name">Power up</span></p>
+    <div class="actions">
+      <button class="sound-toggle" type="button" aria-pressed="false" hidden>
+        <span class="sr">Music</span>
+        <i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i>
+      </button>
+      <button class="mode-switch" type="button" aria-pressed="false">
+        <span class="sr">Manga mode</span>
+        <span aria-hidden="true">Clean</span>
+        <span aria-hidden="true">Manga</span>
+      </button>
+      <button class="cart-btn" type="button" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2L5 8Zm4 0V7a3 3 0 0 1 6 0v1" /></svg>
+        <span class="sr">Cart</span>
+        <b class="cart-count" data-count="0">0</b>
+      </button>
+    </div>
+  </header>
+
+  <!-- The scenes, one at a time: a scroll, a swipe or the arrow keys move to the next (main.js) -->
+  <nav class="index" aria-label="Scenes">
+    <a href="#power"><b>01</b><span>Power up</span></a>
+    <a href="#lab"><b>02</b><span>The Lab</span></a>
+    <a href="#science"><b>03</b><span>The science</span></a>
+    <a href="#proof"><b>04</b><span>Batch check</span></a>
+    <a href="#sensei"><b>05</b><span>Sensei</span></a>
+    <a href="#warriors"><b>06</b><span>Warriors</span></a>
+    <a href="#final"><b>07</b><span>Final form</span></a>
+  </nav>
+  <button class="next" type="button"><span class="next-text">Scroll to power up</span><i aria-hidden="true"></i></button>
+
+  <main class="deck" id="main">
+    <section class="scene scene-power is-active" id="power" data-jp="変身" data-shape="logo" data-side="right" data-name="Power up" aria-labelledby="power-title">
+      <div class="scene-copy">
+        <p class="kicker">Real Saiyan Wellness <i>·</i> Amdavad</p>
+        <h1 class="title" id="power-title"><span>Tap into</span> <span>your final form.</span></h1>
+        <!-- The visitor's name: the energy writes it as it's typed (world.js), and it goes on their tub, their plan and
+             their final form. Kept in this browser only (localStorage). -->
+        <form class="name-form" novalidate>
+          <label for="warrior-name">Your name, warrior <small>Stays on this device</small></label>
+          <span class="name-row">
+            <input id="warrior-name" name="name" maxlength="14" autocomplete="given-name" autocapitalize="words" spellcheck="false" enterkeyhint="done" placeholder="Type it">
+            <button class="name-go" type="submit" aria-label="Lock in my name"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6" /></svg></button>
+          </span>
+        </form>
+        <p class="lede">Lab-tested fuel for people who train like it’s their arc.</p>
+        <p class="ctas">
+          <a class="btn btn-main" href="#lab">Enter the Lab</a>
+          <a class="btn btn-ghost" href="#sensei">Find my stack</a>
+        </p>
+        <ul class="range" aria-label="The range">
+          <li><a href="#lab" data-product-link="whey"><img class="clean-only" src="../img/tub-whey.webp" alt="" width="800" height="1000"><span>Whey</span></a></li>
+          <li><a href="#lab" data-product-link="creatine"><img class="clean-only" src="../img/tub-creatine.webp" alt="" width="800" height="1000"><span>Creatine</span></a></li>
+          <li><a href="#lab" data-product-link="pre"><img class="clean-only" src="../img/tub-pre.webp" alt="" width="800" height="1000"><span>Pre</span></a></li>
+          <li><a href="#lab" data-product-link="hydrate"><img class="clean-only" src="../img/tub-hydrate.webp" alt="" width="800" height="1000"><span>Hydrate</span></a></li>
+        </ul>
+        <p class="hold-hint"><i aria-hidden="true"></i> Press and hold anywhere to power up</p>
+      </div>
+    </section>
+
+    <!-- The shop: the tub on show condenses out of the particles (world.js); the list carries each product's data for
+         the world, the cart and Sensei. placeholder: flavours, sizes, numbers and prices are samples. -->
+    <section class="scene scene-lab" id="lab" data-shape="tub" data-side="right" data-name="The Lab" aria-labelledby="lab-title">
+      <div class="scene-copy">
+        <p class="kicker"><b>02</b> The Lab <i lang="ja">ラボ</i></p>
+        <h2 class="sr" id="lab-title">The Lab: the shop</h2>
+        <ol class="products">
+          <li class="product is-on" data-id="whey" data-code="RSW-01" data-kana="プロテイン" data-gu="પ્રોટીન" data-pic="../img/tub-whey.webp" style="--tone: #c8102e; --on: #f6efe2; --tub: #161413">
+            <p class="product-type">Protein</p>
+            <h3 class="product-name">Whey Protein</h3>
+            <p class="product-flavour">Double Chocolate · 1 kg</p>
+            <dl class="product-stats">
+              <div><dt>Protein</dt><dd>24 g</dd></div>
+              <div><dt>BCAA</dt><dd>5.4 g</dd></div>
+              <div><dt>Servings</dt><dd>33</dd></div>
+            </dl>
+            <p class="product-about">Helps your muscles repair and grow after training.</p>
+            <p class="product-buy"><span class="price"><b>₹2,499</b> <s>₹2,999</s></span> <button class="btn btn-main" type="button" data-add="whey">Add to cart</button></p>
+          </li>
+          <li class="product" data-id="creatine" data-code="RSW-02" data-kana="クレアチン" data-pic="../img/tub-creatine.webp" style="--tone: #1b1817; --on: #f6efe2; --tub: #161413">
+            <p class="product-type">Creatine</p>
+            <h3 class="product-name">Creatine Monohydrate</h3>
+            <p class="product-flavour">Unflavoured · 250 g</p>
+            <dl class="product-stats">
+              <div><dt>Creatine</dt><dd>3 g</dd></div>
+              <div><dt>Ingredients</dt><dd>1</dd></div>
+              <div><dt>Servings</dt><dd>83</dd></div>
+            </dl>
+            <p class="product-about">Powers short, explosive efforts like heavy lifts and sprints.</p>
+            <p class="product-buy"><span class="price"><b>₹999</b> <s>₹1,199</s></span> <button class="btn btn-main" type="button" data-add="creatine">Add to cart</button></p>
+          </li>
+          <li class="product" data-id="pre" data-code="RSW-03" data-kana="プレワークアウト" data-pic="../img/tub-pre.webp" style="--tone: #ff5a1f; --on: #1b1817; --tub: #161413">
+            <p class="product-type">Pre-Workout</p>
+            <h3 class="product-name">Pre-Workout</h3>
+            <p class="product-flavour">Fruit Punch · 300 g</p>
+            <dl class="product-stats">
+              <div><dt>Caffeine</dt><dd>200 mg</dd></div>
+              <div><dt>Citrulline</dt><dd>6 g</dd></div>
+              <div><dt>Servings</dt><dd>30</dd></div>
+            </dl>
+            <p class="product-about">Energy and focus before you step in.</p>
+            <p class="product-buy"><span class="price"><b>₹1,499</b> <s>₹1,799</s></span> <button class="btn btn-main" type="button" data-add="pre">Add to cart</button></p>
+          </li>
+          <li class="product" data-id="hydrate" data-code="RSW-04" data-kana="ハイドレーション" data-pic="../img/tub-hydrate.webp" style="--tone: #efe6d6; --on: #c8102e; --tub: #f2ece2">
+            <p class="product-type">Hydration</p>
+            <h3 class="product-name">Hydration Drink</h3>
+            <p class="product-flavour">Lemon Lime · 30 servings</p>
+            <dl class="product-stats">
+              <div><dt>Electrolytes</dt><dd>5</dd></div>
+              <div><dt>Added sugar</dt><dd>0 g</dd></div>
+              <div><dt>Servings</dt><dd>30</dd></div>
+            </dl>
+            <p class="product-about">Electrolytes to keep you sharp through long, sweaty sessions.</p>
+            <p class="product-buy"><span class="price"><b>₹899</b> <s>₹1,099</s></span> <button class="btn btn-main" type="button" data-add="hydrate">Add to cart</button></p>
+          </li>
+        </ol>
+        <div class="switcher" aria-label="Products">
+          <button class="switch-step" type="button" data-step="-1" aria-label="Previous product">←</button>
+          <button type="button" data-product="whey" aria-pressed="true"><img class="clean-only" src="../img/tub-whey.webp" alt="" width="800" height="1000"><span>Whey</span></button>
+          <button type="button" data-product="creatine" aria-pressed="false"><img class="clean-only" src="../img/tub-creatine.webp" alt="" width="800" height="1000"><span>Creatine</span></button>
+          <button type="button" data-product="pre" aria-pressed="false"><img class="clean-only" src="../img/tub-pre.webp" alt="" width="800" height="1000"><span>Pre</span></button>
+          <button type="button" data-product="hydrate" aria-pressed="false"><img class="clean-only" src="../img/tub-hydrate.webp" alt="" width="800" height="1000"><span>Hydrate</span></button>
+          <button class="switch-step" type="button" data-step="1" aria-label="Next product">→</button>
+        </div>
+      </div>
+      <p class="lab-kana" aria-hidden="true" data-lab-kana>プロテイン</p>
+    </section>
+
+    <!-- How it works, as a story the particles tell: the drained lifter, the creatine tub condensing, full power. The
+         steps play in turn every few seconds; a tap picks one. Photos: Unsplash (free licence). -->
+    <section class="scene scene-science" id="science" data-jp="修行" data-shape="photo" data-side="right" data-name="The science" aria-labelledby="science-title">
+      <div class="scene-copy">
+        <p class="kicker"><b>03</b> How it works <i lang="ja">修行</i></p>
+        <h2 class="title" id="science-title"><span>Every arc</span> <span>needs fuel.</span></h2>
+        <ol class="steps">
+          <li><button type="button" aria-pressed="true" data-photo="../img/hero-rep-1200.webp"><b>Drain</b> <span>Hard sets burn through your muscles’ quick energy, called ATP, in seconds.</span></button></li>
+          <li><button type="button" aria-pressed="false" data-tub="creatine"><b>Recharge</b> <span>3–5 g of creatine a day helps your muscles rebuild it, fast.</span></button></li>
+          <li><button type="button" aria-pressed="false" data-photo="../img/barbell-woman.webp" data-sfx="ゴオオ"><b>Full power</b> <span>More quick energy means one more rep. Then another.</span></button></li>
+        </ol>
+        <p class="ctas"><a class="btn btn-main" href="#lab" data-product-link="creatine">Shop creatine</a></p>
+      </div>
+    </section>
+
+    <!-- Batch check: the two codes on a tub open its lab report, in a sheet over the scene. placeholder: SAMPLE_BATCHES
+         in main.js until real reports. -->
+    <section class="scene scene-proof" id="proof" data-jp="検査" data-shape="shield" data-side="right" data-name="Batch check" aria-labelledby="proof-title">
+      <div class="scene-copy">
+        <p class="kicker"><b>04</b> Batch check <i lang="ja">検査</i></p>
+        <h2 class="title" id="proof-title"><span>Is your tub</span> <span>the real deal?</span></h2>
+        <p class="lede">Fake supplements are everywhere. Every RSW batch is lab-tested: enter the two codes on your tub to see its report.</p>
+        <form class="check-form" novalidate>
+          <p class="field">
+            <label for="batch-code">Batch code <small>on the side</small></label>
+            <input id="batch-code" name="batch" required autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="16" placeholder="CR-2611-07">
+          </p>
+          <p class="field">
+            <label for="check-code">Check code <small>under the lid</small></label>
+            <input id="check-code" name="check" required autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="10" placeholder="4F9K2A">
+          </p>
+          <button class="btn btn-main" type="submit">Check</button>
+          <p class="check-error" role="alert"></p>
+        </form>
+        <p class="fine">Sample reports for now. Try <button class="code-chip" type="button" data-fill="CR-2611-07 4F9K2A">CR-2611-07</button> with <b>4F9K2A</b>.</p>
+      </div>
+    </section>
+
+    <!-- Sensei: three taps (goal, food, training), then a plan in a sheet, with the one RSW pick that fits.
+         shortcut: no step 4 (email the plan); that needs a server, so add it at launch. -->
+    <section class="scene scene-sensei" id="sensei" data-shape="kanji" data-side="right" data-name="Sensei" aria-labelledby="sensei-title">
+      <div class="scene-copy">
+        <p class="kicker"><b>05</b> Sensei <i lang="ja">先生</i></p>
+        <h2 class="title" id="sensei-title"><span>Your plan in</span> <span>three taps.</span></h2>
+        <div class="quiz">
+          <ol class="quiz-steps" aria-hidden="true"><li>Goal</li><li>Food</li><li>Training</li></ol>
+          <fieldset class="q" data-key="goal">
+            <legend><span>What’s your goal?</span></legend>
+            <button type="button" data-value="muscle">Build muscle</button>
+            <button type="button" data-value="lose">Lose weight</button>
+          </fieldset>
+          <fieldset class="q" data-key="diet" hidden>
+            <legend><span>What do you eat?</span></legend>
+            <button type="button" data-value="nonveg"><i class="food-mark nonveg" aria-hidden="true"></i>Non-vegetarian</button>
+            <button type="button" data-value="veg"><i class="food-mark veg" aria-hidden="true"></i>Vegetarian</button>
+          </fieldset>
+          <fieldset class="q" data-key="train" hidden>
+            <legend><span>Where do you train?</span></legend>
+            <button type="button" data-value="gym">Gym</button>
+            <button type="button" data-value="home">Home</button>
+          </fieldset>
+        </div>
+      </div>
+    </section>
+
+    <!-- Warriors: the one on show forms in particles, big; the others wait as thumbnails, and they take turns. Clean shows
+         real people mid-workout; Manga, fight scenes in halftone. Photos: Unsplash (free licence). -->
+    <section class="scene scene-warriors" id="warriors" data-jp="戦士" data-shape="photo" data-side="right" data-name="Warriors" aria-labelledby="warriors-title">
+      <div class="scene-copy">
+        <p class="kicker"><b>06</b> Warriors <i lang="ja">戦士</i></p>
+        <h2 class="title" id="warriors-title"><span>Top 10</span> <span>Warriors.</span></h2>
+        <p class="lede">Not influencers. Real people from the RSW community, a new ten every week.</p>
+        <ul class="crew" aria-label="This week's warriors">
+          <li data-photo="../img/warrior-pulldown.webp" data-sfx="バキッ" aria-current="true">
+            <button type="button"><img class="clean-only" src="../img/warrior-pulldown.webp" alt="A man in a turban training on a lat pulldown machine" width="720" height="900" loading="lazy"></button>
+            <p><span class="clean-only">The pull · Week 12</span></p>
+          </li>
+          <li data-photo="../img/warrior-boxing.webp" data-sfx="シュッ">
+            <button type="button"><img class="clean-only" src="../img/warrior-boxing.webp" alt="A woman throwing a punch in boxing gloves" width="720" height="900" loading="lazy"></button>
+            <p><span class="clean-only">The punch · Week 8</span></p>
+          </li>
+          <li data-photo="../img/warrior-getup.webp" data-sfx="ビュン">
+            <button type="button"><img class="clean-only" src="../img/warrior-getup.webp" alt="A man doing a kettlebell get-up" width="720" height="900" loading="lazy"></button>
+            <p><span class="clean-only">The get-up · Week 20</span></p>
+          </li>
+          <li data-photo="../img/warrior-row.webp" data-sfx="ドンッ">
+            <button type="button"><img class="clean-only" src="../img/warrior-row.webp" alt="A woman doing a dumbbell row" width="720" height="900" loading="lazy"></button>
+            <p><span class="clean-only">The row · Week 5</span></p>
+          </li>
+          <li data-photo="../img/warrior-rest.webp" data-sfx="ゴゴゴ">
+            <button type="button"><img class="clean-only" src="../img/warrior-rest.webp" alt="A man in a green tank top between sets" width="720" height="900" loading="lazy"></button>
+            <p><span class="clean-only">The reset · Week 16</span></p>
+          </li>
+        </ul>
+        <p class="crew-now" aria-live="polite"></p>
+        <p class="ctas"><a class="btn btn-ghost" href="#final">Become a Warrior</a></p>
+      </div>
+    </section>
+
+    <section class="scene scene-final" id="final" data-jp="最終形態" data-shape="burst" data-side="right" data-name="Final form" data-photo="../img/hero-warrior-tall.webp" aria-labelledby="final-title">
+      <div class="scene-copy">
+        <p class="kicker"><b>07</b> Final form <i lang="ja">最終形態</i></p>
+        <h2 class="title" id="final-title"><span>Tap into</span> <span>your final form.</span></h2>
+        <p class="ctas"><a class="btn btn-main" href="#lab">Shop the Lab</a></p>
+      </div>
+      <footer class="end">
+        <!-- placeholder: fill in the brand's real contact details; the policy pages don't exist yet -->
+        <ul>
+          <li><a href="#">Instagram: [handle]</a></li>
+          <li><a href="#">Email: [address]</a></li>
+          <li><a href="#">WhatsApp: [number]</a></li>
+        </ul>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms &amp; Conditions</a></li>
+          <li><a href="#">Shipping Policy</a></li>
+          <li><a href="#">Refund Policy</a></li>
+        </ul>
+        <p class="end-vault"><b>The Vault</b> The RSW anime universe, comics and lore. Opens soon.</p>
+        <p class="end-sign">From Amdavad, with <span lang="gu">ખમીર</span> · <span lang="gu">આવજો!</span></p>
+        <p class="fine">© 2026 Real Saiyan Wellness. Supplements are not a substitute for a balanced diet. Talk to a doctor if you have a medical condition.</p>
+        <p class="fine">Music: “Guiton Sketch” by Kevin MacLeod (<a href="https://incompetech.com/">incompetech.com</a>), licensed under <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons: By Attribution 4.0</a>.</p>
+      </footer>
+    </section>
+  </main>
+
+  <!-- Sheets over the scenes: the batch report and Sensei's plan -->
+  <article class="sheet report" id="report" tabindex="-1" aria-labelledby="report-product" hidden>
+    <button class="sheet-close" type="button" aria-label="Close the report">×</button>
+    <p class="report-sample">Sample report · not a real batch</p>
+    <h3 id="report-product" data-slot="product"></h3>
+    <p class="stamp"><b>Genuine RSW</b></p>
+    <dl class="report-specs">
+      <div><dt>Batch</dt><dd data-slot="batch"></dd></div>
+      <div><dt>Made</dt><dd data-slot="made"></dd></div>
+      <div><dt>Best before</dt><dd data-slot="best"></dd></div>
+      <div><dt>Tested by</dt><dd>NABL-accredited lab</dd></div>
+      <div><dt>Report date</dt><dd data-slot="date"></dd></div>
+      <div><dt>Status</dt><dd class="pass">Passed</dd></div>
+    </dl>
+    <p class="report-measure" data-slot="measure"></p>
+    <div class="gauges">
+      <figure class="gauge">
+        <svg viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="34" /><circle class="fill" cx="42" cy="42" r="34" pathLength="100" /></svg>
+        <b data-slot="claim"></b>
+        <figcaption>On the label</figcaption>
+      </figure>
+      <figure class="gauge is-found">
+        <svg viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="34" /><circle class="fill" cx="42" cy="42" r="34" pathLength="100" /></svg>
+        <b data-slot="found"></b>
+        <figcaption>Found by the lab</figcaption>
+      </figure>
+    </div>
+    <ul class="checks">
+      <li>Heavy metals below limits</li>
+      <li>No banned substances found</li>
+      <li>Microbes within limits</li>
+    </ul>
+    <p class="fine">The full lab report (PDF) opens here once real batches ship.</p>
+  </article>
+  <article class="sheet plan" tabindex="-1" aria-label="Your Sensei plan" hidden></article>
+
+  <!-- shortcut: the cart lives in the browser tab; swap in the shop's real cart and checkout at launch -->
+  <dialog class="cart" id="cart" aria-labelledby="cart-title">
+    <header class="cart-head">
+      <h2 id="cart-title">Your cart</h2>
+      <button class="cart-close" type="button" aria-label="Close cart">×</button>
+    </header>
+    <ul class="cart-lines"></ul>
+    <p class="cart-empty">Your cart is empty. <a href="#lab">Enter the Lab</a></p>
+    <footer class="cart-foot">
+      <p class="cart-total"><span>Total</span> <b>₹0</b></p>
+      <p class="cart-ship"></p>
+      <button class="btn btn-main" type="button" disabled>Checkout opens at launch</button>
+    </footer>
+  </dialog>
+
+  <!-- Every visit opens on this: Clean against Manga, like a fighting game's select screen -->
+  <dialog class="mode-dialog" aria-labelledby="mode-title" tabindex="-1">
+    <h2 id="mode-title">Choose your mode</h2>
+    <div class="choices">
+      <button class="choice choice-clean" type="button" data-pick="clean">
+        <b>Clean</b>
+        <span>Light on black. Calm power.</span>
+      </button>
+      <button class="choice choice-manga" type="button" data-pick="manga">
+        <i aria-hidden="true">マンガ</i>
+        <b>Manga</b>
+        <span>Ink on paper. Full power.</span>
+      </button>
+    </div>
+    <p class="mode-note">Switch any time from the top corner.</p>
+  </dialog>
+
+
+
+  <!-- Music, on by default from the visitor's first click (browsers allow sound only after one). "Guiton Sketch" by
+       Kevin MacLeod is CC BY 4.0: free to use, with the credit at the end. -->
+  <audio class="music" loop preload="none" src="../audio/guiton-sketch.mp3"></audio>
+</body>
+</html>
