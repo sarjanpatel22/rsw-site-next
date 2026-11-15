@@ -107,13 +107,13 @@
   text-transform: uppercase;
 }
 
-/* Clean: points of light on black, a red glow where the world stands */
+/* Clean: pure white and dark grey, a fine grid of graphite points */
 .choice-clean {
   background:
-    radial-gradient(rgb(244 243 239 / 0.9) 1px, transparent 1.6px) 0 0 / 34px 34px,
-    radial-gradient(80% 90% at 70% 40%, rgb(150 14 34 / 0.6), transparent 70%),
-    #050505;
-  color: #f4f3ef;
+    radial-gradient(rgb(29 29 31 / 0.22) 1px, transparent 1.6px) 0 0 / 34px 34px,
+    radial-gradient(80% 90% at 70% 40%, rgb(29 29 31 / 0.05), transparent 70%),
+    #fff;
+  color: #1d1d1f;
 }
 
 /* Manga: paper, screentone and speed lines */
@@ -359,7 +359,7 @@
   animation: mode-flash 0.3s linear;
 }
 
-/* Manga → Clean: black and steel bars, the last with the word */
+/* Manga → Clean: white and grey bars, the last with the word */
 .launch {
   display: grid;
 }
@@ -371,29 +371,29 @@
   justify-items: center;
   gap: 0.75rem;
   background: var(--c);
-  color: #f4f3ef;
+  color: #1d1d1f;
   font-style: normal;
   clip-path: inset(100% 0 0);
 }
 
 .launch i:nth-child(1) {
-  --c: #000;
+  --c: #1d1d1f;
 }
 
 .launch i:nth-child(2) {
-  --c: #3a3a3a;
+  --c: #d2d2d7;
   --k: 1;
 }
 
 .launch i:nth-child(3) {
-  --c: #0b0b0b;
+  --c: #fff;
   --k: 2;
 }
 
 .launch b {
   font: 400 clamp(4rem, 20vw, 18rem) / 0.85 var(--m-display);
   text-transform: uppercase;
-  color: #e3132f;
+  color: #1d1d1f;
 }
 
 .launch small {

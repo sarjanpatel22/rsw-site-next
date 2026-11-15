@@ -1,6 +1,6 @@
 /* ==========================================================================
    RSW, third design: one full-screen scene at a time over a world of particles (world.js, main.js).
-   Clean: light on black. Calm power: white particles with red sparks, big condensed titles, hairline readouts.
+   Clean: pure white and dark grey, so the products stand out. Graphite particles, big condensed titles, hairline readouts.
    Manga: ink on paper. The screen is a manga panel: ink-dot particles (screentone coming alive), a thick panel
    frame, speed lines and a sound effect at every cut, slanted red plates.
    Without main.js the scenes stack as a plain page.
@@ -13,11 +13,13 @@
   --black: #070707;
   --panel: rgb(20 18 18 / 0.88);
   --white: #f4f3ef;
-  --muted: #9c9891;
-  --line: rgb(244 243 239 / 0.16);
+  --ink: #1d1d1f; /* Clean: dark grey on pure white, so the products' own colours are what stand out */
+  --grey: #86868b;
+  --muted: #6e6e73;
+  --line: rgb(29 29 31 / 0.12);
   --ok: #2bb673;
-  --bg: var(--black);
-  --fg: var(--white);
+  --bg: #ffffff;
+  --fg: var(--ink);
 
   --display: "Anton", Impact, "Arial Narrow", sans-serif;
   --brand: "Archivo", "Arial Black", sans-serif;
@@ -35,7 +37,7 @@
   --hud: 4.5rem;
   --rail: 0px;
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 [data-mode="manga"] {
@@ -71,11 +73,9 @@ body {
   overflow-x: clip;
 }
 
-/* Clean: a deep red-black glow where the world stands */
+/* Clean: pure white */
 [data-mode="clean"] body {
-  background:
-    radial-gradient(70% 70% at 70% 45%, rgb(110 12 28 / 0.38) 0%, transparent 60%),
-    radial-gradient(120% 100% at 50% 50%, #121010 0%, #050505 70%);
+  background: #fff;
 }
 
 /* Manga: newsprint, faint screentone, the corners a little darker */
@@ -135,7 +135,7 @@ fieldset {
 }
 
 :focus-visible {
-  outline: 3px solid var(--gold);
+  outline: 3px solid var(--red);
   outline-offset: 3px;
 }
 
@@ -197,8 +197,8 @@ fieldset {
 }
 
 .btn-main {
-  background: var(--white);
-  color: #070707;
+  background: var(--fg);
+  color: var(--bg);
 }
 
 .btn-ghost {
@@ -343,9 +343,9 @@ fieldset {
   pointer-events: none;
 }
 
-/* Clean: a vignette that pulls the eye to the middle */
+/* Clean: nothing over the white */
 [data-mode="clean"] .frame {
-  background: radial-gradient(120% 90% at 55% 50%, transparent 55%, rgb(0 0 0 / 0.55) 100%);
+  background: none;
 }
 
 /* Manga: the screen is a panel, a thick ink border inside a paper gutter */
@@ -768,6 +768,7 @@ fieldset {
 .scene-copy {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* nothing inside can widen it past the screen */
   gap: 1.1rem;
   justify-items: start;
   max-width: 40rem;
@@ -815,7 +816,7 @@ fieldset {
 }
 
 .title > span + span {
-  color: var(--red);
+  color: var(--grey);
 }
 
 /* main.js splits a title into words and letters, so they can rise in one by one */
@@ -858,6 +859,30 @@ fieldset {
   /* Power: a smaller title, so the range of tubs and the hint fit under it */
   .scene-power .title {
     font-size: clamp(3rem, 5vw, 6.4rem);
+  }
+}
+
+/* Wide but short (a 1280x720 laptop): less air above and below the words, so a scene's last button stays in view */
+@media (min-width: 64rem) and (min-aspect-ratio: 9/10) and (max-height: 50rem) {
+  .scene {
+    padding-top: calc(var(--hud) + 0.75rem);
+    padding-bottom: 3.25rem;
+  }
+
+  .deck-on .scene-copy {
+    gap: 0.9rem;
+    max-height: calc(100dvh - var(--hud) - 4rem);
+  }
+
+  .steps button {
+    padding-block: 0.45rem 0.55rem;
+  }
+}
+
+/* Big screens (1600px and up): everything grows with the screen, so a 2560 monitor isn't a small page in a lot of white */
+@media (min-width: 100rem) {
+  html {
+    font-size: calc(0.5vw + 8.4px);
   }
 }
 
@@ -998,14 +1023,16 @@ fieldset {
 /* ---------- The visitor's name: a signature line under the title (main.js, world.js) ---------- */
 .name-form {
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* the input's own width (about 20 letters) mustn't stretch it past the screen */
   gap: 0.45rem;
   width: min(100%, 26rem);
 }
 
 .name-form label {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.25rem 1rem;
   font: 500 0.64rem / 1 var(--mono);
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -1020,7 +1047,7 @@ fieldset {
 
 .name-row {
   display: flex;
-  border-bottom: 2px solid rgb(244 243 239 / 0.3);
+  border-bottom: 2px solid rgb(29 29 31 / 0.22);
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
@@ -1045,7 +1072,7 @@ fieldset {
 }
 
 .name-form input::placeholder {
-  color: rgb(244 243 239 / 0.2);
+  color: rgb(29 29 31 / 0.22);
 }
 
 .name-go {
@@ -1385,14 +1412,14 @@ fieldset {
   width: 100%;
   padding: 0.9rem 0.9rem;
   border: 1px solid var(--line);
-  background: rgb(0 0 0 / 0.35);
+  background: #f5f5f7;
   font: 500 1.1rem / 1 var(--mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .field input::placeholder {
-  color: rgb(244 243 239 / 0.25);
+  color: rgb(29 29 31 / 0.3);
 }
 
 .field input:focus {
@@ -1402,7 +1429,7 @@ fieldset {
 
 .check-error {
   grid-column: 1 / -1;
-  color: #ff8c8c;
+  color: #c8102e;
   font-weight: 700;
 }
 
@@ -1412,7 +1439,7 @@ fieldset {
 
 .code-chip {
   padding: 0.1rem 0.4rem;
-  background: rgb(244 243 239 / 0.12);
+  background: rgb(29 29 31 / 0.07);
   font: 500 0.78rem / 1.4 var(--mono);
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -1598,7 +1625,7 @@ fieldset {
   width: 100%;
   aspect-ratio: 4 / 5;
   overflow: hidden;
-  background: #111;
+  background: #ececee;
   outline: 2px solid transparent;
   outline-offset: 2px;
   transition: outline-color 0.3s, translate 0.4s var(--ease);
@@ -1749,7 +1776,8 @@ fieldset {
   display: grid;
   gap: 1rem;
   padding: 1.6rem var(--gutter) calc(1.6rem + env(safe-area-inset-bottom));
-  background: rgb(14 13 13 / 0.94);
+  background: rgb(255 255 255 / 0.96);
+  box-shadow: 0 -24px 60px rgb(29 29 31 / 0.1);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border-top: 2px solid var(--red);
@@ -1947,7 +1975,7 @@ fieldset {
   gap: 1rem;
   align-items: center;
   padding: 1rem;
-  background: rgb(244 243 239 / 0.06);
+  background: #f5f5f7;
   border: 1px solid var(--line);
 }
 
@@ -2051,18 +2079,18 @@ fieldset {
     content: "";
     flex: 1;
     height: 2px;
-    background: rgb(244 243 239 / 0.16);
+    background: rgb(29 29 31 / 0.12);
     transition: background-color 0.4s;
   }
 
   .index a:has(~ a[aria-current])::before {
-    background: rgb(244 243 239 / 0.62);
+    background: rgb(29 29 31 / 0.5);
   }
 
   .index a[aria-current]::before {
     height: 3px;
-    background: linear-gradient(var(--red), var(--red)) 0 0 / 100% 100% no-repeat, rgb(244 243 239 / 0.16);
-    box-shadow: 0 0 14px rgb(227 19 47 / 0.75);
+    background: linear-gradient(var(--red), var(--red)) 0 0 / 100% 100% no-repeat, rgb(29 29 31 / 0.12);
+    box-shadow: 0 0 10px rgb(227 19 47 / 0.35);
   }
 
   /* The number and the name stay, for screen readers */
@@ -2093,23 +2121,13 @@ fieldset {
    sizes it to the room the words leave), and the words sit under it on a dark fade. The next scene is a swipe away.
    ========================================================================== */
 @media (max-aspect-ratio: 9/10) {
-  [data-mode="clean"] body {
-    background:
-      radial-gradient(90% 50% at 50% 30%, rgb(120 12 30 / 0.45) 0%, transparent 70%),
-      radial-gradient(130% 100% at 50% 32%, #141111 0%, #050505 72%);
-  }
-
-  [data-mode="clean"] .frame {
-    background: radial-gradient(150% 90% at 50% 32%, transparent 55%, rgb(0 0 0 / 0.6) 100%);
-  }
-
-  /* A dark fade under the words, so a spark drifting behind them never gets in their way */
+  /* A white fade under the words, so a spark drifting behind them never gets in their way */
   .deck-on .deck::before {
     content: "";
     position: absolute;
     inset: auto 0 0;
     height: 60%;
-    background: linear-gradient(to top, rgb(5 5 5 / 0.92) 0%, rgb(5 5 5 / 0.66) 42%, transparent 100%);
+    background: linear-gradient(to top, rgb(255 255 255 / 0.95) 0%, rgb(255 255 255 / 0.7) 42%, transparent 100%);
     pointer-events: none;
   }
 
@@ -2256,12 +2274,12 @@ fieldset {
   }
 
   .ctas {
-    flex-wrap: nowrap;
     gap: 0.6rem;
+    width: 100%;
   }
 
   .ctas .btn {
-    flex: 1 1 0;
+    flex: 1 1 9rem; /* side by side when both fit, stacked when they don't */
     min-height: 2.9rem;
     padding-inline: 0.7rem;
   }
@@ -2292,6 +2310,11 @@ fieldset {
     height: 2.1rem;
   }
 
+  /* Swiping the stage changes the tub too, so the arrows go */
+  .switcher .switch-step {
+    display: none;
+  }
+
   /* The science: only the step on show says its words; the others fold to their names (the height never changes) */
   .steps {
     gap: 0.2rem;
@@ -2318,6 +2341,70 @@ fieldset {
   .steps [aria-pressed="true"] > span {
     height: 3em;
     opacity: 1;
+  }
+}
+
+/* ---------- Narrow phones (360px and under): the Lab's row is just the tubs; their names stay for screen readers ---------- */
+@media (max-width: 22.5rem) {
+  .switcher button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* ---------- Short phones (an old iPhone SE, 320x568): the world gets a little less room, and only what matters stays ---------- */
+@media (max-aspect-ratio: 9/10) and (max-height: 40rem) {
+  .scene {
+    padding-top: calc(var(--hud) + 1.2rem + 22vh);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  }
+
+  .deck-on .scene-copy {
+    max-height: calc(100dvh - var(--hud) - 2.2rem - 22vh - env(safe-area-inset-bottom));
+  }
+
+  .next,
+  .scene-power .lede,
+  .hold-hint,
+  .product-flavour {
+    display: none;
+  }
+
+  .ctas .btn {
+    flex-basis: 7rem;
+    padding-inline: 0.5rem;
+  }
+}
+
+/* ---------- Very narrow phones (a folded Fold): the switch shows only where it takes you; a smaller logo and title ---------- */
+@media (max-width: 21rem) {
+  .logo {
+    font-size: 1.35rem;
+  }
+
+  .mode-switch {
+    grid-template-columns: auto;
+  }
+
+  .mode-switch::before,
+  .mode-switch span[aria-hidden]:nth-of-type(2) {
+    display: none;
+  }
+
+  .title {
+    font-size: clamp(2.1rem, 13vw, 2.6rem);
+  }
+
+  .product-name {
+    font-size: clamp(1.9rem, 11vw, 2.3rem);
+  }
+
+  .steps [aria-pressed="true"] > span {
+    height: 4.5em;
   }
 }
 
@@ -2355,6 +2442,31 @@ fieldset {
     display: none;
   }
 
+  .product {
+    gap: 0.45rem;
+  }
+
+  .product-flavour {
+    display: none;
+  }
+
+  .product-stats div {
+    padding-block: 0.3rem;
+  }
+
+  .product-stats dd {
+    font-size: 1.35rem;
+  }
+
+  .price b {
+    font-size: 1.6rem;
+  }
+
+  .product-buy .btn {
+    min-height: 2.5rem;
+    padding: 0.6rem 1rem;
+  }
+
   /* The last scene stacks its words and footer (see below): both keep to the left, clear of the world */
   .deck-on .scene-final > * {
     max-width: min(34rem, 50%);
@@ -2372,8 +2484,9 @@ fieldset {
   margin: 0 0 0 auto;
   padding: 0;
   border: 0;
-  background: #0e0d0d;
-  color: #f4f3ef;
+  background: #fff;
+  color: var(--fg);
+  box-shadow: -24px 0 60px rgb(29 29 31 / 0.14);
   flex-direction: column;
 }
 
@@ -2382,7 +2495,7 @@ fieldset {
 }
 
 .cart::backdrop {
-  background: rgb(0 0 0 / 0.6);
+  background: rgb(29 29 31 / 0.3);
   backdrop-filter: blur(3px);
 }
 
@@ -2391,7 +2504,7 @@ fieldset {
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid rgb(244 243 239 / 0.16);
+  border-bottom: 1px solid var(--line);
 }
 
 .cart-head h2 {
@@ -2421,7 +2534,7 @@ fieldset {
   gap: 0.25rem 0.9rem;
   align-items: center;
   padding: 0.9rem 0;
-  border-bottom: 1px solid rgb(244 243 239 / 0.16);
+  border-bottom: 1px solid var(--line);
 }
 
 .cart-lines img {
@@ -2442,7 +2555,7 @@ fieldset {
 }
 
 .cart-lines li > p:first-of-type span {
-  color: #9c9891;
+  color: var(--muted);
   font-size: 0.78rem;
 }
 
@@ -2456,7 +2569,7 @@ fieldset {
 .qty button {
   width: 1.9rem;
   height: 1.9rem;
-  border: 1px solid rgb(244 243 239 / 0.2);
+  border: 1px solid rgb(29 29 31 / 0.2);
   font-weight: 800;
 }
 
@@ -2473,7 +2586,7 @@ fieldset {
 
 .cart-empty {
   padding: 2rem 1.5rem;
-  color: #9c9891;
+  color: var(--muted);
 }
 
 .cart:not(.is-empty) .cart-empty {
@@ -2484,7 +2597,7 @@ fieldset {
   display: grid;
   gap: 0.75rem;
   padding: 1.25rem 1.5rem calc(1.25rem + env(safe-area-inset-bottom));
-  border-top: 1px solid rgb(244 243 239 / 0.16);
+  border-top: 1px solid var(--line);
 }
 
 .cart-total {
@@ -2563,15 +2676,15 @@ fieldset {
 
 .flash b {
   font: 400 clamp(3.6rem, 13vw, 11rem) / 1 var(--jp);
-  color: #fff;
-  text-shadow: 0 0 40px rgb(227 19 47 / 0.9), 0 0 120px rgb(227 19 47 / 0.6);
+  color: var(--fg);
+  text-shadow: 0 0 40px rgb(227 19 47 / 0.35);
 }
 
 .flash small {
   font: 400 clamp(1rem, 2.4vw, 1.8rem) / 1 var(--display);
   letter-spacing: 0.5em;
   text-transform: uppercase;
-  color: #fff;
+  color: var(--fg);
 }
 
 .is-final .flash {
@@ -2612,17 +2725,13 @@ fieldset {
   }
 
   [data-mode="clean"].is-charging .frame {
-    background:
-      radial-gradient(70% 70% at 70% 50%, rgb(227 19 47 / calc(var(--charge) * 0.25)), transparent 70%),
-      radial-gradient(120% 90% at 55% 50%, transparent 55%, rgb(0 0 0 / 0.55) 100%);
+    background: radial-gradient(70% 70% at 70% 50%, rgb(227 19 47 / calc(var(--charge) * 0.16)), transparent 70%);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) and (max-aspect-ratio: 9/10) {
   [data-mode="clean"].is-charging .frame {
-    background:
-      radial-gradient(90% 50% at 50% 30%, rgb(227 19 47 / calc(var(--charge) * 0.32)), transparent 70%),
-      radial-gradient(150% 90% at 50% 32%, transparent 55%, rgb(0 0 0 / 0.6) 100%);
+    background: radial-gradient(90% 50% at 50% 30%, rgb(227 19 47 / calc(var(--charge) * 0.2)), transparent 70%);
   }
 }
 
@@ -2943,12 +3052,12 @@ fieldset {
 
 @keyframes flash-bg {
   0% {
-    background: rgb(255 255 255 / 0.95);
+    background: rgb(227 19 47 / 0.9);
   }
 
   25%,
   100% {
-    background: rgb(255 255 255 / 0);
+    background: rgb(227 19 47 / 0);
   }
 }
 

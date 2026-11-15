@@ -1,7 +1,7 @@
 // ---------- RSW v3, the world: one three.js canvas behind every scene ----------
 // Tens of thousands of particles of energy flow from one shape to the next as you move between scenes (main.js sends
 // 'rsw:scene'), and in the Lab the RSW tub condenses out of them ('rsw:product' changes it). Clean draws the particles
-// as glowing light on black; Manga as ink dots on paper, screentone coming alive. They flee the pointer. Without
+// as graphite on white; Manga as ink dots on paper, screentone coming alive. They flee the pointer. Without
 // WebGL the scenes stand on their own; with reduced motion the shapes change without the storm.
 // A classic script (a module wouldn't load from a file:// page), so three.js comes in by dynamic import.
 (async () => {
@@ -236,13 +236,14 @@
     uUnitPx: { value: 1000 }, // device pixels per world unit at a distance of 1
     uScale: { value: 1 }, // the world's scale
     uCharge: { value: 0 }, // held: 0 to 1
+    uQuiet: { value: 0 }, // a product on show: the energy round it steps back, so the product is what you see
     uFlowY: { value: 0 }, // a scene change: the energy streams the way you're travelling as it re-forms
   };
   const particles = new THREE.Points(geometry, new THREE.ShaderMaterial({
     uniforms,
     transparent: true,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
+    blending: THREE.NormalBlending,
     vertexShader: /* glsl */ `
       uniform float uT, uTime, uChaos, uSize, uPush, uManga, uDot, uUnitPx, uScale, uCharge, uFlowY;
       uniform vec3 uMouse;
@@ -257,6 +258,7 @@
       varying float vRed;
       varying float vSize;
       varying vec3 vColor;
+      varying float vShown;
 
       float ease(float t) { return t < 0.5 ? 4.0 * t * t * t : 1.0 - pow(-2.0 * t + 2.0, 3.0) / 2.0; }
 
@@ -300,12 +302,14 @@
         vGlow = 0.5 + 0.5 * aRand.z + near * 0.6 + uCharge;
         vTone = aRand.y;
         vPhoto = photo;
-        vColor = pow(col.rgb, vec3(1.45)) * shown;
+        vColor = col.rgb;
+        vShown = shown;
         vRed = step(0.22, col.r - max(col.g, col.b)) * step(0.3, shown); // strongly red in the picture: printed in red
       }`,
     fragmentShader: /* glsl */ `
       uniform vec3 uInk, uTone;
-      uniform float uManga;
+      uniform float uManga, uQuiet;
+      varying float vShown;
       varying float vGlow;
       varying float vTone;
       varying float vPhoto;
@@ -315,15 +319,17 @@
 
       void main() {
         float r = length(gl_PointCoord - 0.5);
-        vec3 spark = mix(uInk, uTone, step(0.82, vTone));
+        vec3 spark = mix(uInk, uTone, step(uManga > 0.5 ? 0.82 : 0.93, vTone)); // Clean: graphite, a red one here and there
         if (uManga > 0.5) {
           // Ink dots with a hard edge, like screentone; a picture's white parts print no dot at all
           if (r > 0.5 || vSize < 0.9) discard;
           gl_FragColor = vec4(mix(spark, mix(uInk, uTone, vRed), vPhoto), 1.0);
           return;
         }
-        float a = smoothstep(0.5, 0.0, r);
-        gl_FragColor = vec4(mix(spark, vColor, vPhoto), mix(a * a * vGlow, a * 1.1, vPhoto));
+        // Clean: graphite on white, soft-edged, some darker than others; a picture's dots in its own colours
+        float a = smoothstep(0.5, 0.15, r);
+        float ink = clamp(0.2 + 0.3 * vGlow, 0.0, 0.9);
+        gl_FragColor = vec4(mix(spark, vColor, vPhoto), a * mix(ink, vShown, vPhoto) * (1.0 - uQuiet));
       }`,
   }));
   particles.frustumCulled = false;
@@ -355,7 +361,7 @@
     uniforms: dustUniforms,
     transparent: true,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
+    blending: THREE.NormalBlending,
     vertexShader: /* glsl */ `
       uniform float uTime, uUnitPx, uFlow, uSpeed, uAspect, uPx, uCamZ;
       uniform vec2 uLook;
@@ -388,7 +394,7 @@
       void main() {
         vec2 d = abs(vUv - 0.5) * 2.0;
         float a = (1.0 - smoothstep(0.0, 1.0, d.x)) * (1.0 - smoothstep(0.3, 1.0, d.y));
-        gl_FragColor = vec4(mix(vec3(0.96, 0.95, 0.93), uTone, vRed), a * vA);
+        gl_FragColor = vec4(mix(vec3(0.17, 0.17, 0.18), uTone, vRed), a * vA * 0.55);
       }`,
   }));
   dust.frustumCulled = false;
@@ -406,7 +412,7 @@
     uniforms: auraUniforms,
     transparent: true,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
+    blending: THREE.NormalBlending,
     vertexShader: /* glsl */ `
       uniform float uTime, uCharge, uSize, uAura;
       attribute vec4 aSeed;
@@ -435,7 +441,7 @@
 
       void main() {
         float a = smoothstep(0.5, 0.0, length(gl_PointCoord - 0.5));
-        gl_FragColor = vec4(mix(uTone, vec3(1.0, 0.93, 0.86), vHeat * vHeat), a * a * vA);
+        gl_FragColor = vec4(mix(vec3(0.24, 0.24, 0.26), uTone, smoothstep(0.2, 0.9, 1.0 - vHeat)), a * a * vA * 0.85);
       }`,
   }));
   aura.frustumCulled = false;
@@ -454,7 +460,7 @@
       auraBase.set(shape.pos.subarray(k * 3, k * 3 + 3), i * 3);
     }
     auraGeometry.attributes.position.needsUpdate = true;
-    auraWant = shape.col ? 0.1 : 0.4; // a picture just smoulders
+    auraWant = shape.col ? 0.1 : behind ? 0.22 : 0.4; // a picture just smoulders; a product barely, it's the star
   }
 
   // ---------- Shockwaves: a ring of light out of the middle, at a tap, a scene change, the big bang ----------
@@ -465,7 +471,7 @@
       transparent: true,
       depthWrite: false,
       depthTest: false,
-      blending: THREE.AdditiveBlending,
+      blending: THREE.NormalBlending,
       vertexShader: /* glsl */ `
         varying vec2 vUv;
         void main() {
@@ -480,7 +486,7 @@
           float r = length(vUv - 0.5) * 2.0;
           float edge = smoothstep(0.8, 0.95, r) * (1.0 - smoothstep(0.95, 1.0, r));
           float a = edge * pow(1.0 - uK, 1.4) * min(1.0, 0.4 + uPower * 0.25) + smoothstep(1.0, 0.0, r) * pow(1.0 - uK, 4.0) * 0.1;
-          gl_FragColor = vec4(mix(vec3(1.0, 0.95, 0.9), uTone, smoothstep(0.86, 1.0, r)), a);
+          gl_FragColor = vec4(mix(vec3(0.16, 0.16, 0.18), uTone, smoothstep(0.86, 1.0, r)), a * 0.6);
         }`,
     }));
     mesh.visible = false;
@@ -658,9 +664,26 @@
   });
   const tubModel = new THREE.Group();
   tubModel.add(body, lid, wrap, top);
+  // A soft shadow under it, so it stands on the white like a studio shot (it grows and turns with the tub)
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({
+    map: paint(256, 256, (g, w, h) => {
+      const fall = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+      fall.addColorStop(0, 'rgb(0 0 0 / 0.5)');
+      fall.addColorStop(0.5, 'rgb(0 0 0 / 0.16)');
+      fall.addColorStop(1, 'rgb(0 0 0 / 0)');
+      g.fillStyle = fall;
+      g.fillRect(0, 0, w, h);
+    }),
+    transparent: true,
+    depthWrite: false,
+  }));
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = -0.8; // the tub's base
+  shadow.scale.set(1.9, 1.9, 1);
   tubModel.position.y = -0.79;
   const tub = new THREE.Group(); // turns round its middle; grows out of the particles
   tub.add(tubModel);
+  tub.add(shadow);
   tub.scale.setScalar(0.0001);
   world.add(tub);
 
@@ -692,15 +715,16 @@
     outlines.forEach((line) => { line.visible = ink; });
     scene.environment = ink ? null : studio;
     renderer.toneMapping = ink ? THREE.NoToneMapping : THREE.NeutralToneMapping;
-    ambient.intensity = ink ? 1.25 : 0;
-    key.intensity = ink ? 2.2 : 1.1;
-    redRim.intensity = ink ? 0 : 2.6;
-    backRim.intensity = ink ? 0 : 1.2;
-    // The particles: light on black, or ink on paper; the Lab tints them with the product's colour
-    particles.material.blending = ink ? THREE.NormalBlending : THREE.AdditiveBlending;
+    ambient.intensity = ink ? 1.25 : 0.25;
+    key.intensity = ink ? 2.2 : 1.2;
+    redRim.intensity = 0; // Clean is a product shot on white: neutral light
+    backRim.intensity = ink ? 0 : 1;
+    shadow.visible = !ink;
+    // The particles: graphite on white, or ink on paper; the Lab tints them with the product's colour
+    particles.material.blending = THREE.NormalBlending;
     particles.material.needsUpdate = true;
     uniforms.uManga.value = ink ? 1 : 0;
-    uniforms.uInk.value.set(ink ? '#141010' : '#f4f3ef');
+    uniforms.uInk.value.set(ink ? '#141010' : '#2c2c30');
     const tone = current === 'tub' && !['#efe6d6', '#1b1817'].includes(p.tone) ? p.tone : ink ? '#d8001f' : '#e3132f';
     uniforms.uTone.value.set(tone);
     dressed = `${look}-${product}-${current}`;
@@ -898,7 +922,7 @@
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    uniforms.uSize.value = (manga() ? 34 : 62) * renderer.getPixelRatio();
+    uniforms.uSize.value = (manga() ? 34 : 44) * renderer.getPixelRatio();
     uniforms.uUnitPx.value = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
     dustUniforms.uAspect.value = camera.aspect;
     dustUniforms.uPx.value = renderer.getPixelRatio();
@@ -1112,6 +1136,7 @@
     tubSpin = tubSpin * Math.exp(-dt * 3.2) + charge * charge * dt * 18; // a charge spins the tub up too
     tub.rotation.y = 0.12 + (still ? 0 : Math.sin(t * 0.5) * 0.3) + tubSpin;
     tub.visible = tubAt > 0.01;
+    uniforms.uQuiet.value = Math.min(1, tubAt) * 0.93;
 
     // The pointer, in the world's own space; it stops pushing a moment after it stops moving
     ray.setFromCamera(pointer, camera);
