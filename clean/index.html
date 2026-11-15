@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- Designed in its own colours: a phone's dark mode (Samsung Internet's, Chrome's) mustn't repaint it -->
+  <meta name="color-scheme" content="only light">
   <title>RSW — Real Saiyan Wellness</title>
   <meta name="description" content="Real Saiyan Wellness: lab-tested fitness fuel with an anime soul. Tap into your final form.">
   <!-- Test site: keep search engines out. Remove at launch. -->
@@ -31,9 +33,10 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wdth,wght@125,900&family=IBM+Plex+Mono:wght@500&family=Montserrat:wght@500;700;800&family=Anek+Gujarati:wdth,wght@100,700&display=swap">
   <!-- Only the Japanese this page uses (check.py fails if a letter is missing; it would fall back to a box) -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&text=%E3%82%A2%E3%82%A4%E3%82%A6%E3%82%AA%E3%82%AB%E3%82%AC%E3%82%AD%E3%82%AF%E3%82%B3%E3%82%B4%E3%82%B7%E3%82%B9%E3%82%BA%E3%82%BB%E3%83%81%E3%83%83%E3%83%86%E3%83%88%E3%83%89%E3%83%8E%E3%83%8F%E3%83%90%E3%83%93%E3%83%94%E3%83%97%E3%83%9B%E3%83%9C%E3%83%9E%E3%83%9F%E3%83%A2%E3%83%A5%E3%83%A7%E3%83%A9%E3%83%AA%E3%83%AC%E3%83%AD%E3%83%AF%E3%83%B3%E3%83%BC%E4%BF%AE%E5%85%88%E5%A3%AB%E5%A4%89%E5%BD%A2%E6%85%8B%E6%88%A6%E6%9C%80%E6%9F%BB%E6%A4%9C%E7%94%9F%E7%B5%82%E8%A1%8C%E8%BA%AB%21&display=swap">
-  <link rel="stylesheet" href="styles.css">
+  <!-- ?v= makes a phone fetch the new file after an update instead of a cached one: change it whenever these files change -->
+  <link rel="stylesheet" href="styles.css?v=20261115-2">
   <!-- The mode picker and the change to Manga, shared with the Manga page -->
-  <link rel="stylesheet" href="../switch.css">
+  <link rel="stylesheet" href="../switch.css?v=20261115-2">
   <!-- three.js draws the world. Its minified build imports the full-size core, so the map points that at the minified
        core; the integrity hashes pin every file. -->
   <script type="importmap">
@@ -50,10 +53,10 @@
       }
     }
   </script>
-  <script src="../switch.js" defer></script>
-  <script src="main.js" defer></script>
-  <script src="photos.js" defer></script>
-  <script src="world.js" defer></script>
+  <script src="../switch.js?v=20261115-2" defer></script>
+  <script src="main.js?v=20261115-2" defer></script>
+  <script src="photos.js?v=20261115-2" defer></script>
+  <script src="world.js?v=20261115-2" defer></script>
 </head>
 <body>
   <!-- Clean → Manga, 変身 ("transform!"): an action burst grows out of the button and 変身!! slams in; the Manga page

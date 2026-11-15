@@ -37,7 +37,7 @@
   --hud: 4.5rem;
   --rail: 0px;
 
-  color-scheme: light;
+  color-scheme: only light; /* not repainted by a phone's dark mode */
 }
 
 [data-mode="manga"] {

@@ -49,7 +49,7 @@
   --halftone-dark: radial-gradient(rgb(0 0 0 / 0.2) 1.2px, transparent 1.8px) 0 0 / 8px 8px;
   --speedlines: repeating-conic-gradient(rgb(246 233 211 / 0.1) 0 1.5deg, transparent 1.5deg 8deg);
 
-  color-scheme: light;
+  color-scheme: only light; /* not repainted by a phone's dark mode */
 }
 
 [data-mode="manga"] {
