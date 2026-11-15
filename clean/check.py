@@ -30,7 +30,11 @@ def browser(reduced=False):
         opts.add_argument("--force-prefers-reduced-motion")
     opts.binary_location = "/usr/bin/chromium"
     opts.set_capability("goog:loggingPrefs", {"browser": "ALL"})
-    return webdriver.Chrome(options=opts, service=Service("/usr/bin/chromedriver"))
+    d = webdriver.Chrome(options=opts, service=Service("/usr/bin/chromedriver"))
+    # What the page tells the world, from its first moment: a fast load (cached, online) can show a scene before a
+    # listener added after get() would hear it
+    d.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {"source": "addEventListener('rsw:scene', (e) => { window.__world = e.detail; })"})
+    return d
 
 
 def ok(cond, what):
